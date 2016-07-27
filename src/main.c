@@ -249,26 +249,8 @@ readCoreXmlCallback (void *context,
     return i;
 }
 
-int
-main (int argc, char **argv)
+static void initRegions()
 {
-    CompIOCtx ctx;
-    char      *displayName = 0;
-    char      *plugin[256];
-    int	      i, nPlugin = 0;
-    Bool      disableSm = FALSE;
-    char      *clientId = NULL;
-    char      *refreshRateArg = NULL;
-
-    programName = argv[0];
-    programArgc = argc;
-    programArgv = argv;
-
-    signal (SIGHUP, signalHandler);
-    signal (SIGCHLD, signalHandler);
-    signal (SIGINT, signalHandler);
-    signal (SIGTERM, signalHandler);
-
     emptyRegion.rects = &emptyRegion.extents;
     emptyRegion.numRects = 0;
     emptyRegion.extents.x1 = 0;
@@ -283,20 +265,21 @@ main (int argc, char **argv)
     infiniteRegion.extents.y1 = MINSHORT;
     infiniteRegion.extents.x2 = MAXSHORT;
     infiniteRegion.extents.y2 = MAXSHORT;
+}
 
-    memset (&ctx, 0, sizeof (ctx));
-
+static void parseArgs(int argc, char **argv)
+{
     for (i = 1; i < argc; i++)
     {
 	if (!strcmp (argv[i], "--help"))
 	{
 	    usage ();
-	    return 0;
+	    exit(0);
 	}
 	else if (!strcmp (argv[i], "--version"))
 	{
 	    printf (PACKAGE_STRING "\n");
-	    return 0;
+	    exit(0);
 	}
 	else if (!strcmp (argv[i], "--debug"))
 	{
@@ -381,21 +364,119 @@ main (int argc, char **argv)
 	    compLogMessage ("core", CompLogLevelWarn,
 			    "Unknown option '%s'\n", argv[i]);
 	}
-	else
+	else if (nPlugin < 256)
 	{
-	    if (nPlugin < 256)
 		plugin[nPlugin++] = argv[i];
 	}
     }
-
-    if (refreshRateArg)
+    
+    if(refreshRateArg)
     {
-	ctx.refreshRateData = malloc (strlen (refreshRateArg) + 256);
-	if (ctx.refreshRateData)
-	    sprintf (ctx.refreshRateData,
-		     "<min>1</min><default>%s</default>",
-		     refreshRateArg);
+	ctx.refreshRateData = malloc(strlen(refreshRateArg) + 256);
+	if(ctx.refreshRateData)
+	{
+	    sprintf(ctx.refreshRateData, "<min>1</min><default>%s</default>", refreshRateArg);
+	}
     }
+    
+}
+
+static int compizInit()
+{
+    xmlInitParser();
+
+    LIBXML_TEST_VERSION;
+
+    if(!compInitMetadata(&coreMetadata))
+    {
+	compLogMessage("core", CompLogLevelFatal,
+		       "Couldn't initialize core metadata");
+	return 1;
+    }
+
+    if(!compAddMetadataFromIO(&coreMetadata, readCoreXmlCallback, NULL, &ctx))
+    {
+	return 1;
+    }
+    
+    if(ctx.refreshRateData)
+    {
+	free (ctx.refreshRateData);
+    }
+    
+    if(ctx.pluginData)
+    {
+	free (ctx.pluginData);
+    }
+    
+    compAddMetadataFromFile(&coreMetadata, "core");
+
+    if (!initCore())
+    {
+	return 1;
+    }
+
+    coreInitialized = TRUE;
+
+    if (!disableSm)
+    {
+	initSession(clientId);
+    }
+
+
+    if (!addDisplay(displayName))
+    {
+	return 1;
+    }
+    
+    return 0;
+}
+
+static void compizFree()
+{
+    if(!disableSm)
+    {
+        closeSession();
+    }
+    
+    coreInitialized = FALSE;
+
+    finiCore();
+    compFiniMetadata(&coreMetadata);
+
+    xmlCleanupParser();
+
+    if (initialPlugins)
+    {
+        free(initialPlugins);
+    }
+}
+
+int main(int argc, char **argv)
+{
+    CompIOCtx ctx;
+    char      *displayName = 0;
+    char      *plugin[256];
+    int	      i;
+    int       nPlugin;
+    Bool      disableSm = FALSE;
+    char      *clientId = NULL;
+    char      *refreshRateArg = NULL;
+
+    programName = argv[0];
+    programArgc = argc;
+    programArgv = argv;
+
+    signal (SIGHUP, signalHandler); // Signal termination of process terminal
+    signal (SIGCHLD, signalHandler); // Signal termination of child process
+    signal (SIGINT, signalHandler); // Signal interrupt
+    signal (SIGTERM, signalHandler); // Signal termination of parent process
+
+    initRegions();
+
+    memset(&ctx, 0, sizeof (ctx));
+
+    parseArgs(argc, argv);
 
     if (nPlugin)
     {
@@ -429,55 +510,15 @@ main (int argc, char **argv)
 	}
     }
 
-    xmlInitParser ();
-
-    LIBXML_TEST_VERSION;
-
-    if (!compInitMetadata (&coreMetadata))
+    if(!compizInit())
     {
-	compLogMessage ("core", CompLogLevelFatal,
-			"Couldn't initialize core metadata");
-	return 1;
+    	compizFree();
+    	return 1;
     }
 
-    if (!compAddMetadataFromIO (&coreMetadata,
-				readCoreXmlCallback, NULL,
-				&ctx))
-	return 1;
+    eventLoop();
 
-    if (ctx.refreshRateData)
-	free (ctx.refreshRateData);
-
-    if (ctx.pluginData)
-	free (ctx.pluginData);
-
-    compAddMetadataFromFile (&coreMetadata, "core");
-
-    if (!initCore ())
-	return 1;
-
-    coreInitialized = TRUE;
-
-    if (!disableSm)
-	initSession (clientId);
-
-    if (!addDisplay (displayName))
-	return 1;
-
-    eventLoop ();
-
-    if (!disableSm)
-	closeSession ();
-
-    coreInitialized = FALSE;
-
-    finiCore ();
-    compFiniMetadata (&coreMetadata);
-
-    xmlCleanupParser ();
-
-    if (initialPlugins)
-        free (initialPlugins);
+    compizFree();
 
     if (restartSignal)
     {
