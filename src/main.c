@@ -452,6 +452,45 @@ static void compizFree()
     }
 }
 
+static void addInitialPlugins()
+{
+    if(nPlugin)
+    {
+	int size = 256;
+
+	for(i = 0; i < nPlugin; i++)
+	{
+	    size += strlen(plugin[i]) + 16;
+	}
+
+	ctx.pluginData = malloc(size);
+	if(ctx.pluginData)
+	{
+	    char *ptr = ctx.pluginData;
+
+	    ptr += sprintf(ptr, "<type>string</type><default>");
+
+	    for(i = 0; i < nPlugin; i++)
+	    {
+		ptr += sprintf(ptr, "<value>%s</value>", plugin[i]);
+	    }
+
+	    ptr += sprintf(ptr, "</default>");
+	}
+
+	initialPlugins = malloc(nPlugin * sizeof (char *));
+	if(initialPlugins)
+	{
+	    memcpy(initialPlugins, plugin, nPlugin * sizeof (char *));
+	    nInitialPlugins = nPlugin;
+	}
+	else
+	{
+	    nInitialPlugins = 0;
+	}
+    }
+}
+
 int main(int argc, char **argv)
 {
     CompIOCtx ctx;
@@ -478,37 +517,7 @@ int main(int argc, char **argv)
 
     parseArgs(argc, argv);
 
-    if (nPlugin)
-    {
-	int size = 256;
-
-	for (i = 0; i < nPlugin; i++)
-	    size += strlen (plugin[i]) + 16;
-
-	ctx.pluginData = malloc (size);
-	if (ctx.pluginData)
-	{
-	    char *ptr = ctx.pluginData;
-
-	    ptr += sprintf (ptr, "<type>string</type><default>");
-
-	    for (i = 0; i < nPlugin; i++)
-		ptr += sprintf (ptr, "<value>%s</value>", plugin[i]);
-
-	    ptr += sprintf (ptr, "</default>");
-	}
-
-	initialPlugins = malloc (nPlugin * sizeof (char *));
-	if (initialPlugins)
-	{
-	    memcpy (initialPlugins, plugin, nPlugin * sizeof (char *));
-	    nInitialPlugins = nPlugin;
-	}
-	else
-	{
-	    nInitialPlugins = 0;
-	}
-    }
+    addInitialPlugins();
 
     if(!compizInit())
     {
@@ -520,7 +529,7 @@ int main(int argc, char **argv)
 
     compizFree();
 
-    if (restartSignal)
+    if (restartSignal) // Restart Compiz if requested to do so
     {
 	execvp (programName, programArgv);
 	return 1;
