@@ -215,17 +215,16 @@ compAddMetadataFromIO (CompMetadata	     *metadata,
     doc = xmlReadIO (ioread, ioclose, ioctx, NULL, NULL, 0);
     if (!doc)
     {
-	compLogMessage ("core", CompLogLevelWarn,
-			"Unable to parse XML metadata");
+		compLogMessage ("core", CompLogLevelWarn, "Unable to parse XML metadata");
 
-	return FALSE;
+		return FALSE;
     }
 
     d = realloc (metadata->doc, (metadata->nDoc + 1) * sizeof (xmlDoc *));
     if (!d)
     {
-	xmlFreeDoc (doc);
-	return FALSE;
+		xmlFreeDoc (doc);
+		return FALSE;
     }
 
     d[metadata->nDoc++] = doc;

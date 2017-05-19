@@ -43,17 +43,17 @@ addCursor (CompScreen *s)
     c = malloc (sizeof (CompCursor));
     if (c)
     {
-	c->screen = s;
-	c->image  = NULL;
-	c->x	  = 0;
-	c->y	  = 0;
+		c->screen = s;
+		c->image  = NULL;
+		c->x	  = 0;
+		c->y	  = 0;
 
-	c->next    = s->cursors;
-	s->cursors = c;
+		c->next    = s->cursors;
+		s->cursors = c;
 
-	updateCursor (c, 0, 0, 0);
+		updateCursor (c, 0, 0, 0);
 
-	/* XFixesHideCursor (s->display->display, s->root); */
+		/* XFixesHideCursor (s->display->display, s->root); */
     }
 }
 
@@ -72,21 +72,23 @@ addCursorDamageRect (CompCursor *c,
     REGION region;
 
     if (c->screen->damageMask & COMP_SCREEN_DAMAGE_ALL_MASK)
-	return;
+	{
+		return;
+	}
 
     region.extents = *rect;
 
     if (!(*c->screen->damageCursorRect) (c, FALSE, &region.extents))
     {
-	region.extents.x1 += c->x;
-	region.extents.y1 += c->y;
-	region.extents.x2 += c->x;
-	region.extents.y2 += c->y;
+		region.extents.x1 += c->x;
+		region.extents.y1 += c->y;
+		region.extents.x2 += c->x;
+		region.extents.y2 += c->y;
 
-	region.rects = &region.extents;
-	region.numRects = region.size = 1;
+		region.rects = &region.extents;
+		region.numRects = region.size = 1;
 
-	damageScreenRegion (c->screen, &region);
+		damageScreenRegion (c->screen, &region);
     }
 }
 
@@ -96,7 +98,9 @@ addCursorDamage (CompCursor *c)
     BoxRec box;
 
     if (c->screen->damageMask & COMP_SCREEN_DAMAGE_ALL_MASK)
-	return;
+	{
+		return;
+	}
 
     box.x1 = 0;
     box.y1 = 0;
@@ -115,82 +119,82 @@ updateCursor (CompCursor    *c,
     /* new current cursor */
     if (!c->image || c->image->serial != serial)
     {
-	CompCursorImage *cursorImage;
+		CompCursorImage *cursorImage;
 
-	cursorImage = findCursorImageAtScreen (c->screen, serial);
-	if (!cursorImage)
-	{
-	    Display	      *dpy = c->screen->display->display;
-	    XFixesCursorImage *image;
+		cursorImage = findCursorImageAtScreen (c->screen, serial);
+		if (!cursorImage)
+		{
+			Display	      *dpy = c->screen->display->display;
+			XFixesCursorImage *image;
 
-	    image = XFixesGetCursorImage (dpy);
-	    if (!image)
-		return;
+			image = XFixesGetCursorImage (dpy);
+			if (!image)
+			{
+				return;
+			}
 
-	    cursorImage = malloc (sizeof (CompCursorImage));
-	    if (!cursorImage)
-	    {
-		XFree (image);
-		return;
-	    }
+			cursorImage = malloc (sizeof (CompCursorImage));
+			if (!cursorImage)
+			{
+				XFree (image);
+				return;
+			}
 
-	    x = image->x;
-	    y = image->y;
+			x = image->x;
+			y = image->y;
 
-	    cursorImage->serial = image->cursor_serial;
-	    cursorImage->xhot   = image->xhot;
-	    cursorImage->yhot   = image->yhot;
-	    cursorImage->width  = image->width;
-	    cursorImage->height = image->height;
+			cursorImage->serial = image->cursor_serial;
+			cursorImage->xhot   = image->xhot;
+			cursorImage->yhot   = image->yhot;
+			cursorImage->width  = image->width;
+			cursorImage->height = image->height;
 
-	    initTexture (c->screen, &cursorImage->texture);
+			initTexture (c->screen, &cursorImage->texture);
 
-	    if (!imageBufferToTexture (c->screen,
-				       &cursorImage->texture,
-				       (char *) image->pixels,
-				       image->width,
-				       image->height))
-	    {
-		free (cursorImage);
-		XFree (image);
-		return;
-	    }
+			if (!imageBufferToTexture (c->screen, &cursorImage->texture, (char *) image->pixels, image->width, image->height))
+			{
+				free (cursorImage);
+				XFree (image);
+				return;
+			}
 
-	    XFree (image);
+			XFree (image);
 
-	    cursorImage->next = c->screen->cursorImages;
-	    c->screen->cursorImages = cursorImage;
+			cursorImage->next = c->screen->cursorImages;
+			c->screen->cursorImages = cursorImage;
+		}
+
+		if (c->image)
+		{
+			addCursorDamage (c);
+		}
+
+		c->image = cursorImage;
+
+		c->x = x - c->image->xhot;
+		c->y = y - c->image->yhot;
+
+		setCursorMatrix (c);
+
+		addCursorDamage (c);
 	}
-
-	if (c->image)
-	    addCursorDamage (c);
-
-	c->image = cursorImage;
-
-	c->x = x - c->image->xhot;
-	c->y = y - c->image->yhot;
-
-	setCursorMatrix (c);
-
-	addCursorDamage (c);
-    }
     else
     {
-	int newX, newY;
+		int newX, newY;
 
-	newX = x - c->image->xhot;
-	newY = y - c->image->yhot;
+		newX = x - c->image->xhot;
+		newY = y - c->image->yhot;
 
-	if (c->x != newX || c->y != newY)
-	{
-	    addCursorDamage (c);
+		if (c->x != newX || c->y != newY)
+		{
+			addCursorDamage (c);
 
-	    c->x = newX;
-	    c->y = newY;
+			c->x = newX;
+			c->y = newY;
 
-	    setCursorMatrix (c);
+			setCursorMatrix (c);
 
-	    addCursorDamage (c);
-	}
+			addCursorDamage (c);
+		}
     }
 }

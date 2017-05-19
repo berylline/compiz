@@ -124,61 +124,53 @@ nameScreenObject (CompObject *object)
     return strdup (tmp);
 }
 
-CompObject *
-findScreenObject (CompObject *parent,
-		  const char *name)
+CompObject *findScreenObject(CompObject *parent, const char *name)
 {
-    if (parent->type == COMP_OBJECT_TYPE_DISPLAY)
+    if(parent->type == COMP_OBJECT_TYPE_DISPLAY)
     {
-	CompScreen *s;
-	int	   screenNum = atoi (name);
+		CompScreen *s;
+		int screenNum = atoi(name);
 
-	CORE_DISPLAY (parent);
+		CORE_DISPLAY(parent);
 
-	for (s = d->screens; s; s = s->next)
-	    if (s->screenNum == screenNum)
-		return &s->base;
+		for(s = d->screens; s; s = s->next)
+		{
+			if(s->screenNum == screenNum)
+			{
+				return &s->base;
+			}
+		}
     }
 
     return NULL;
 }
 
-int
-allocateScreenPrivateIndex (CompDisplay *display)
+int allocateScreenPrivateIndex(CompDisplay *display)
 {
-    return compObjectAllocatePrivateIndex (&display->base,
-					   COMP_OBJECT_TYPE_SCREEN);
+    return compObjectAllocatePrivateIndex(&display->base, COMP_OBJECT_TYPE_SCREEN);
 }
 
-void
-freeScreenPrivateIndex (CompDisplay *display,
-			int	    index)
+void freeScreenPrivateIndex(CompDisplay *display, int index)
 {
-    compObjectFreePrivateIndex (&display->base,
-				COMP_OBJECT_TYPE_SCREEN,
-				index);
+    compObjectFreePrivateIndex(&display->base, COMP_OBJECT_TYPE_SCREEN, index);
 }
 
-static Bool
-desktopHintEqual (CompScreen	*s,
-		  unsigned long *data,
-		  int		size,
-		  int		offset,
-		  int		hintSize)
+static Bool desktopHintEqual(CompScreen *s, unsigned long *data, int size, int	offset, int hintSize)
 {
-    if (size != s->desktopHintSize)
-	return FALSE;
+    if(size != s->desktopHintSize)
+    {
+		return FALSE;
+    }
 
-    if (memcmp (data + offset,
-		s->desktopHintData + offset,
-		hintSize * sizeof (unsigned long)) == 0)
-	return TRUE;
+    if(memcmp(data + offset, s->desktopHintData + offset, hintSize * sizeof(unsigned long)) == 0)
+    {
+		return TRUE;
+    }
 
     return FALSE;
 }
 
-static void
-setDesktopHints (CompScreen *s)
+static void setDesktopHints(CompScreen *s)
 {
     CompDisplay   *d = s->display;
     unsigned long *data;
@@ -186,105 +178,113 @@ setDesktopHints (CompScreen *s)
 
     size = s->nDesktop * 2 + s->nDesktop * 2 + s->nDesktop * 4 + 1;
 
-    data = malloc (sizeof (unsigned long) * size);
-    if (!data)
-	return;
+    data = malloc(sizeof (unsigned long) * size);
+    if(!data)
+    {
+		return;
+    }
 
     offset   = 0;
     hintSize = s->nDesktop * 2;
 
-    for (i = 0; i < s->nDesktop; i++)
+    for(i = 0; i < s->nDesktop; i++)
     {
-	data[offset + i * 2 + 0] = s->x * s->width;
-	data[offset + i * 2 + 1] = s->y * s->height;
+		data[offset + i * 2 + 0] = s->x * s->width;
+		data[offset + i * 2 + 1] = s->y * s->height;
     }
 
-    if (!desktopHintEqual (s, data, size, offset, hintSize))
-	XChangeProperty (d->display, s->root, d->desktopViewportAtom,
-			 XA_CARDINAL, 32, PropModeReplace,
-			 (unsigned char *) &data[offset], hintSize);
+    if(!desktopHintEqual(s, data, size, offset, hintSize))
+    {
+		XChangeProperty(d->display, s->root, d->desktopViewportAtom, XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &data[offset], hintSize);
+    }
 
     offset += hintSize;
 
-    for (i = 0; i < s->nDesktop; i++)
+    for(i = 0; i < s->nDesktop; i++)
     {
-	data[offset + i * 2 + 0] = s->width  * s->hsize;
-	data[offset + i * 2 + 1] = s->height * s->vsize;
+		data[offset + i * 2 + 0] = s->width  * s->hsize;
+		data[offset + i * 2 + 1] = s->height * s->vsize;
     }
 
-    if (!desktopHintEqual (s, data, size, offset, hintSize))
-	XChangeProperty (d->display, s->root, d->desktopGeometryAtom,
-			 XA_CARDINAL, 32, PropModeReplace,
-			 (unsigned char *) &data[offset], hintSize);
+    if(!desktopHintEqual(s, data, size, offset, hintSize))
+    {
+		XChangeProperty(d->display, s->root, d->desktopGeometryAtom, XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &data[offset], hintSize);
+    }
 
     offset += hintSize;
     hintSize = s->nDesktop * 4;
 
-    for (i = 0; i < s->nDesktop; i++)
+    for(i = 0; i < s->nDesktop; i++)
     {
-	data[offset + i * 4 + 0] = s->workArea.x;
-	data[offset + i * 4 + 1] = s->workArea.y;
-	data[offset + i * 4 + 2] = s->workArea.width;
-	data[offset + i * 4 + 3] = s->workArea.height;
+		data[offset + i * 4 + 0] = s->workArea.x;
+		data[offset + i * 4 + 1] = s->workArea.y;
+		data[offset + i * 4 + 2] = s->workArea.width;
+		data[offset + i * 4 + 3] = s->workArea.height;
     }
 
-    if (!desktopHintEqual (s, data, size, offset, hintSize))
-	XChangeProperty (d->display, s->root, d->workareaAtom,
-			 XA_CARDINAL, 32, PropModeReplace,
-			 (unsigned char *) &data[offset], hintSize);
+    if(!desktopHintEqual(s, data, size, offset, hintSize))
+    {
+		XChangeProperty(d->display, s->root, d->workareaAtom, XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &data[offset], hintSize);
+    }
 
     offset += hintSize;
 
     data[offset] = s->nDesktop;
     hintSize = 1;
 
-    if (!desktopHintEqual (s, data, size, offset, hintSize))
-	XChangeProperty (d->display, s->root, d->numberOfDesktopsAtom,
-			 XA_CARDINAL, 32, PropModeReplace,
-			 (unsigned char *) &data[offset], hintSize);
+    if(!desktopHintEqual(s, data, size, offset, hintSize))
+    {
+		XChangeProperty(d->display, s->root, d->numberOfDesktopsAtom, XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &data[offset], hintSize);
+    }
 
-    if (s->desktopHintData)
-	free (s->desktopHintData);
+    if(s->desktopHintData)
+    {
+		free(s->desktopHintData);
+    }
 
     s->desktopHintData = data;
     s->desktopHintSize = size;
 }
 
-static void
-setVirtualScreenSize (CompScreen *screen,
-		      int	 hsize,
-		      int	 vsize)
+static void setVirtualScreenSize(CompScreen *screen, int hsize, int vsize)
 {
     /* if hsize or vsize is being reduced */
-    if (hsize < screen->hsize ||
-	vsize < screen->vsize)
+    if(hsize < screen->hsize || vsize < screen->vsize)
     {
 	CompWindow *w;
 	int        tx = 0;
 	int        ty = 0;
 
-	if (screen->x >= hsize)
+	if(screen->x >= hsize)
+	{
 	    tx = screen->x - (hsize - 1);
-	if (screen->y >= vsize)
+	}
+	if(screen->y >= vsize)
+	{
 	    ty = screen->y - (vsize - 1);
+	}
 
-	if (tx != 0 || ty != 0)
-	    moveScreenViewport (screen, tx, ty, TRUE);
+	if(tx != 0 || ty != 0)
+	{
+	    moveScreenViewport(screen, tx, ty, TRUE);
+	}
 
 	/* Move windows that were in one of the deleted viewports into the
 	   closest viewport */
-	for (w = screen->windows; w; w = w->next)
+	for(w = screen->windows; w; w = w->next)
 	{
 	    int moveX = 0;
 	    int moveY = 0;
 
-	    if (windowOnAllViewports (w))
+	    if(windowOnAllViewports(w))
+	    {
 		continue;
+	    }
 
 	    /* Find which viewport the (inner) window's top-left corner falls
 	       in, and check if it's outside the new viewport horizontal and
 	       vertical index range */
-	    if (hsize < screen->hsize)
+	    if(hsize < screen->hsize)
 	    {
 		int vpX;   /* x index of a window's vp */
 
@@ -298,7 +298,7 @@ setVirtualScreenSize (CompScreen *screen,
 		if (vpX >= hsize)
 		    moveX = ((hsize - 1) - vpX) * screen->width;
 	    }
-	    if (vsize < screen->vsize)
+	    if(vsize < screen->vsize)
 	    {
 		int vpY;   /* y index of a window's vp */
 
@@ -313,10 +313,10 @@ setVirtualScreenSize (CompScreen *screen,
 		    moveY = ((vsize - 1) - vpY) * screen->height;
 	    }
 
-	    if (moveX != 0 || moveY != 0)
+	    if(moveX != 0 || moveY != 0)
 	    {
-		moveWindow (w, moveX, moveY, TRUE, TRUE);
-		syncWindowPosition (w);
+		moveWindow(w, moveX, moveY, TRUE, TRUE);
+		syncWindowPosition(w);
 	    }
 	}
     }
@@ -324,7 +324,7 @@ setVirtualScreenSize (CompScreen *screen,
     screen->hsize = hsize;
     screen->vsize = vsize;
 
-    setDesktopHints (screen);
+    setDesktopHints(screen);
 }
 
 static void
@@ -750,17 +750,17 @@ startupSequenceTimeout (void *data)
     return TRUE;
 }
 
-static void
-addSequence (CompScreen        *screen,
-	     SnStartupSequence *sequence)
+static void addSequence(CompScreen *screen, SnStartupSequence *sequence)
 {
     CompStartupSequence *s;
 
-    s = malloc (sizeof (CompStartupSequence));
-    if (!s)
+    s = malloc(sizeof(CompStartupSequence));
+    if(!s)
+    {
 	return;
+    }
 
-    sn_startup_sequence_ref (sequence);
+    sn_startup_sequence_ref(sequence);
 
     s->next     = screen->startupSequences;
     s->sequence = sequence;
@@ -769,70 +769,74 @@ addSequence (CompScreen        *screen,
 
     screen->startupSequences = s;
 
-    if (!screen->startupSequenceTimeoutHandle)
-	screen->startupSequenceTimeoutHandle =
-	    compAddTimeout (1000, 1500,
-			    startupSequenceTimeout,
-			    screen);
+    if(!screen->startupSequenceTimeoutHandle)
+    {
+	screen->startupSequenceTimeoutHandle = compAddTimeout(1000, 1500, startupSequenceTimeout, screen);
+    }
 
-    updateStartupFeedback (screen);
+    updateStartupFeedback(screen);
 }
 
-static void
-removeSequence (CompScreen        *screen,
-		SnStartupSequence *sequence)
+static void removeSequence(CompScreen *screen, SnStartupSequence *sequence)
 {
     CompStartupSequence *s, *p = NULL;
 
-    for (s = screen->startupSequences; s; s = s->next)
+    for(s = screen->startupSequences; s; s = s->next)
     {
-	if (s->sequence == sequence)
+	if(s->sequence == sequence)
+	{
 	    break;
+	}
 
 	p = s;
     }
 
-    if (!s)
+    if(!s)
+    {
 	return;
+    }
 
-    sn_startup_sequence_unref (sequence);
+    sn_startup_sequence_unref(sequence);
 
     if (p)
-	p->next = s->next;
-    else
-	screen->startupSequences = NULL;
-
-    free (s);
-
-    if (!screen->startupSequences && screen->startupSequenceTimeoutHandle)
     {
-	compRemoveTimeout (screen->startupSequenceTimeoutHandle);
+	p->next = s->next;
+    }
+    else
+    {
+	screen->startupSequences = NULL;
+    }
+
+    free(s);
+
+    if(!screen->startupSequences && screen->startupSequenceTimeoutHandle)
+    {
+	compRemoveTimeout(screen->startupSequenceTimeoutHandle);
 	screen->startupSequenceTimeoutHandle = 0;
     }
 
-    updateStartupFeedback (screen);
+    updateStartupFeedback(screen);
 }
 
-static void
-removeAllSequences (CompScreen *screen)
+static void removeAllSequences(CompScreen *screen)
 {
     CompStartupSequence *s;
     CompStartupSequence *sNext;
 
-    for (s = screen->startupSequences; s; s = sNext)
+    for(s = screen->startupSequences; s; s = sNext)
     {
 	sNext = s->next;
-	sn_startup_sequence_unref (s->sequence);
-	free (s);
+	sn_startup_sequence_unref(s->sequence);
+	free(s);
     }
     screen->startupSequences = NULL;
 
-    if (screen->startupSequenceTimeoutHandle)
+    if(screen->startupSequenceTimeoutHandle)
     {
-	compRemoveTimeout (screen->startupSequenceTimeoutHandle);
+	compRemoveTimeout(screen->startupSequenceTimeoutHandle);
 	screen->startupSequenceTimeoutHandle = 0;
     }
-    updateStartupFeedback (screen);
+    updateStartupFeedback(screen);
 }
 
 static void
@@ -1779,8 +1783,8 @@ addScreen (CompDisplay *display,
 
     for (i = 0; i < SCREEN_EDGE_NUM; i++)
     {
-	s->screenEdge[i].id    = None;
-	s->screenEdge[i].count = 0;
+		s->screenEdge[i].id    = None;
+		s->screenEdge[i].count = 0;
     }
 
     s->buttonGrab  = 0;
@@ -2596,9 +2600,10 @@ focusDefaultWindow (CompScreen *s)
 
 	if (w && (*w->screen->focusWindow) (w))
 	{
-	    if (!(w->type & (CompWindowTypeDesktopMask |
-			     CompWindowTypeDockMask)))
-		focus = w;
+	    if (!(w->type & (CompWindowTypeDesktopMask | CompWindowTypeDockMask)))
+		{
+			focus = w;
+		}
 	}
 	else
 	{
@@ -2616,53 +2621,59 @@ focusDefaultWindow (CompScreen *s)
 
 	    if (status && rootReturn == s->root)
 	    {
-		w = findTopLevelWindowAtDisplay (d, childReturn);
+			w = findTopLevelWindowAtDisplay (d, childReturn);
 
-		if (w && (*s->focusWindow) (w))
-		{
-		    if (!(w->type & (CompWindowTypeDesktopMask |
-				     CompWindowTypeDockMask)))
-			focus = w;
-		}
+			if (w && (*s->focusWindow) (w))
+			{
+				if (!(w->type & (CompWindowTypeDesktopMask | CompWindowTypeDockMask)))
+				{
+					focus = w;
+				}
+			}
 	    }
 	}
     }
 
     if (!focus)
     {
-	for (w = s->reverseWindows; w; w = w->prev)
-	{
-	    if (w->type & CompWindowTypeDockMask)
-		continue;
+		for (w = s->reverseWindows; w; w = w->prev)
+		{
+			if (w->type & CompWindowTypeDockMask)
+			{
+				continue;
+			}
 
-	    if (!(*s->focusWindow) (w))
-		continue;
+			if (!(*s->focusWindow) (w))
+			{
+				continue;
+			}
 
-	    if (!focus)
-	    {
-		focus = w;
-		continue;
-	    }
+			if (!focus)
+			{
+				focus = w;
+				continue;
+			}
 
-	    if (w->type & (CompWindowTypeNormalMask |
-			   CompWindowTypeDialogMask |
-			   CompWindowTypeModalDialogMask))
-	    {
-		if (compareWindowActiveness (focus, w) < 0)
-		    focus = w;
-	    }
-	}
+			if (w->type & (CompWindowTypeNormalMask | CompWindowTypeDialogMask | CompWindowTypeModalDialogMask))
+			{
+				if (compareWindowActiveness (focus, w) < 0)
+				{
+					focus = w;
+				}
+			}
+		}
     }
 
     if (focus)
     {
-	if (focus->id != d->activeWindow)
-	    moveInputFocusToWindow (focus);
+		if (focus->id != d->activeWindow)
+		{
+			moveInputFocusToWindow (focus);
+		}
     }
     else
     {
-	XSetInputFocus (d->display, s->root, RevertToPointerRoot,
-			CurrentTime);
+		XSetInputFocus (d->display, s->root, RevertToPointerRoot, CurrentTime);
     }
 }
 
@@ -2672,15 +2683,19 @@ findWindowAtScreen (CompScreen *s,
 {
     if (lastFoundWindow && lastFoundWindow->id == id)
     {
-	return lastFoundWindow;
+		return lastFoundWindow;
     }
     else
     {
-	CompWindow *w;
+		CompWindow *w;
 
-	for (w = s->windows; w; w = w->next)
-	    if (w->id == id)
-		return (lastFoundWindow = w);
+		for (w = s->windows; w; w = w->next)
+		{
+			if (w->id == id)
+			{
+				return (lastFoundWindow = w);
+			}
+		}
     }
 
     return 0;
@@ -2694,19 +2709,25 @@ findTopLevelWindowAtScreen (CompScreen *s,
 
     w = findWindowAtScreen (s, id);
     if (!w)
-	return NULL;
+	{
+		return NULL;
+	}
 
     if (w->attrib.override_redirect)
     {
-	/* likely a frame window */
-	if (w->attrib.class == InputOnly)
-	{
-	    for (w = s->windows; w; w = w->next)
-		if (w->frame == id)
-		    return w;
-	}
+		/* likely a frame window */
+		if (w->attrib.class == InputOnly)
+		{
+			for (w = s->windows; w; w = w->next)
+			{
+				if (w->frame == id)
+				{
+					return w;
+				}
+			}
+		}
 
-	return NULL;
+		return NULL;
     }
 
     return w;
@@ -2721,48 +2742,48 @@ insertWindowIntoScreen (CompScreen *s,
 
     if (s->windows)
     {
-	if (!aboveId)
-	{
-	    w->next = s->windows;
-	    w->prev = NULL;
-	    s->windows->prev = w;
-	    s->windows = w;
-	}
-	else
-	{
-	    for (p = s->windows; p; p = p->next)
-	    {
-		if (p->id == aboveId)
+		if (!aboveId)
 		{
-		    if (p->next)
-		    {
-			w->next = p->next;
-			w->prev = p;
-			p->next->prev = w;
-			p->next = w;
-		    }
-		    else
-		    {
-			p->next = w;
-			w->next = NULL;
-			w->prev = p;
-			s->reverseWindows = w;
-		    }
-		    break;
+			w->next = s->windows;
+			w->prev = NULL;
+			s->windows->prev = w;
+			s->windows = w;
 		}
-	    }
+		else
+		{
+			for (p = s->windows; p; p = p->next)
+			{
+				if (p->id == aboveId)
+				{
+					if (p->next)
+					{
+						w->next = p->next;
+						w->prev = p;
+						p->next->prev = w;
+						p->next = w;
+					}
+					else
+					{
+						p->next = w;
+						w->next = NULL;
+						w->prev = p;
+						s->reverseWindows = w;
+					}
+					break;
+				}
+			}
 
-#ifdef DEBUG
-	    if (!p)
-		abort ();
-#endif
+	#ifdef DEBUG
+			if (!p)
+			abort ();
+	#endif
 
-	}
+		}
     }
     else
     {
-	s->reverseWindows = s->windows = w;
-	w->prev = w->next = NULL;
+		s->reverseWindows = s->windows = w;
+		w->prev = w->next = NULL;
     }
 }
 
@@ -2777,35 +2798,35 @@ unhookWindowFromScreen (CompScreen *s,
 
     if (next || prev)
     {
-	if (next)
-	{
-	    if (prev)
-	    {
-		next->prev = prev;
-	    }
-	    else
-	    {
-		s->windows = next;
-		next->prev = NULL;
-	    }
-	}
+		if (next)
+		{
+			if (prev)
+			{
+				next->prev = prev;
+			}
+			else
+			{
+				s->windows = next;
+				next->prev = NULL;
+			}
+		}
 
-	if (prev)
-	{
-	    if (next)
-	    {
-		prev->next = next;
-	    }
-	    else
-	    {
-		s->reverseWindows = prev;
-		prev->next = NULL;
-	    }
-	}
+		if (prev)
+		{
+			if (next)
+			{
+				prev->next = next;
+			}
+			else
+			{
+				s->reverseWindows = prev;
+				prev->next = NULL;
+			}
+		}
     }
     else
     {
-	s->windows = s->reverseWindows = NULL;
+		s->windows = s->reverseWindows = NULL;
     }
 
     if (w == lastFoundWindow)
@@ -2824,42 +2845,43 @@ pushScreenGrab (CompScreen *s,
 {
     if (s->maxGrab == 0)
     {
-	int status;
+		int status;
 
-	status = XGrabPointer (s->display->display, s->grabWindow, TRUE,
-			       POINTER_GRAB_MASK,
-			       GrabModeAsync, GrabModeAsync,
-			       s->root, cursor,
-			       CurrentTime);
+		status = XGrabPointer (s->display->display, s->grabWindow, TRUE,
+					   POINTER_GRAB_MASK,
+					   GrabModeAsync, GrabModeAsync,
+					   s->root, cursor,
+					   CurrentTime);
 
-	if (status == GrabSuccess)
-	{
-	    status = XGrabKeyboard (s->display->display,
-				    s->grabWindow, TRUE,
-				    GrabModeAsync, GrabModeAsync,
-				    CurrentTime);
-	    if (status != GrabSuccess)
-	    {
-		XUngrabPointer (s->display->display, CurrentTime);
-		return 0;
-	    }
-	}
-	else
-	    return 0;
+		if (status == GrabSuccess)
+		{
+			status = XGrabKeyboard (s->display->display,
+						s->grabWindow, TRUE,
+						GrabModeAsync, GrabModeAsync,
+						CurrentTime);
+			if (status != GrabSuccess)
+			{
+				XUngrabPointer (s->display->display, CurrentTime);
+				return 0;
+			}
+		}
+		else
+			return 0;
     }
     else
     {
-	XChangeActivePointerGrab (s->display->display, POINTER_GRAB_MASK,
-				  cursor, CurrentTime);
+		XChangeActivePointerGrab (s->display->display, POINTER_GRAB_MASK, cursor, CurrentTime);
     }
 
     if (s->grabSize <= s->maxGrab)
     {
-	s->grabs = realloc (s->grabs, sizeof (CompGrab) * (s->maxGrab + 1));
-	if (!s->grabs)
-	    return 0;
+		s->grabs = realloc (s->grabs, sizeof (CompGrab) * (s->maxGrab + 1));
+		if (!s->grabs)
+		{
+			return 0;
+		}
 
-	s->grabSize = s->maxGrab + 1;
+		s->grabSize = s->maxGrab + 1;
     }
 
     s->grabs[s->maxGrab].cursor = cursor;
@@ -3990,8 +4012,8 @@ makeScreenCurrent (CompScreen *s)
 {
     if (currentRoot != s->root)
     {
-	glXMakeCurrent (s->display->display, s->output, s->ctx);
-	currentRoot = s->root;
+		glXMakeCurrent (s->display->display, s->output, s->ctx);
+		currentRoot = s->root;
     }
 
     s->pendingCommands = TRUE;
@@ -4002,10 +4024,10 @@ finishScreenDrawing (CompScreen *s)
 {
     if (s->pendingCommands)
     {
-	makeScreenCurrent (s);
-	glFinish ();
+		makeScreenCurrent (s);
+		glFinish ();
 
-	s->pendingCommands = FALSE;
+		s->pendingCommands = FALSE;
     }
 }
 

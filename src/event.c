@@ -48,12 +48,14 @@ handleWindowDamageRect (CompWindow *w,
     Bool   initial = FALSE;
 
     if (!w->redirected || w->bindFailed)
-	return;
+	{
+		return;
+	}
 
     if (!w->damaged)
     {
-	w->damaged = initial = TRUE;
-	w->invisible = WINDOW_INVISIBLE (w);
+		w->damaged = initial = TRUE;
+		w->invisible = WINDOW_INVISIBLE (w);
     }
 
     region.extents.x1 = x;
@@ -63,19 +65,21 @@ handleWindowDamageRect (CompWindow *w,
 
     if (!(*w->screen->damageWindowRect) (w, initial, &region.extents))
     {
-	region.extents.x1 += w->attrib.x + w->attrib.border_width;
-	region.extents.y1 += w->attrib.y + w->attrib.border_width;
-	region.extents.x2 += w->attrib.x + w->attrib.border_width;
-	region.extents.y2 += w->attrib.y + w->attrib.border_width;
+		region.extents.x1 += w->attrib.x + w->attrib.border_width;
+		region.extents.y1 += w->attrib.y + w->attrib.border_width;
+		region.extents.x2 += w->attrib.x + w->attrib.border_width;
+		region.extents.y2 += w->attrib.y + w->attrib.border_width;
 
-	region.rects = &region.extents;
-	region.numRects = region.size = 1;
+		region.rects = &region.extents;
+		region.numRects = region.size = 1;
 
-	damageScreenRegion (w->screen, &region);
+		damageScreenRegion (w->screen, &region);
     }
 
     if (initial)
-	damageWindowOutputExtents (w);
+	{
+		damageWindowOutputExtents (w);
+	}
 }
 
 void
@@ -83,41 +87,41 @@ handleSyncAlarm (CompWindow *w)
 {
     if (w->syncWait)
     {
-	if (w->syncWaitHandle)
-	{
-	    compRemoveTimeout (w->syncWaitHandle);
-	    w->syncWaitHandle = 0;
-	}
+		if (w->syncWaitHandle)
+		{
+			compRemoveTimeout (w->syncWaitHandle);
+			w->syncWaitHandle = 0;
+		}
 
-	w->syncWait = FALSE;
+		w->syncWait = FALSE;
 
-	if (resizeWindow (w,
-			  w->syncX, w->syncY,
-			  w->syncWidth, w->syncHeight,
-			  w->syncBorderWidth))
-	{
-	    XRectangle *rects;
-	    int	       nDamage;
+		if (resizeWindow (w,
+				  w->syncX, w->syncY,
+				  w->syncWidth, w->syncHeight,
+				  w->syncBorderWidth))
+		{
+			XRectangle *rects;
+			int	       nDamage;
 
-	    nDamage = w->nDamage;
-	    rects   = w->damageRects;
-	    while (nDamage--)
-	    {
-		handleWindowDamageRect (w,
-					rects[nDamage].x,
-					rects[nDamage].y,
-					rects[nDamage].width,
-					rects[nDamage].height);
-	    }
+			nDamage = w->nDamage;
+			rects   = w->damageRects;
+			while (nDamage--)
+			{
+			handleWindowDamageRect (w,
+						rects[nDamage].x,
+						rects[nDamage].y,
+						rects[nDamage].width,
+						rects[nDamage].height);
+			}
 
-	    w->nDamage = 0;
-	}
-	else
-	{
-	    /* resizeWindow failing means that there is another pending
-	       resize and we must send a new sync request to the client */
-	    sendSyncRequest (w);
-	}
+			w->nDamage = 0;
+		}
+		else
+		{
+			/* resizeWindow failing means that there is another pending
+			   resize and we must send a new sync request to the client */
+			sendSyncRequest (w);
+		}
     }
 }
 
@@ -134,48 +138,46 @@ moveInputFocusToOtherWindow (CompWindow *w)
 
     if (w->transientFor && w->transientFor != s->root)
     {
-	CompWindow *ancestor = findWindowAtDisplay (d, w->transientFor);
-	if (ancestor && !(ancestor->type & (CompWindowTypeDesktopMask |
-					    CompWindowTypeDockMask)))
-	{
-	    moveInputFocusToWindow (ancestor);
-	    focussedAny = TRUE;
-	}
+		CompWindow *ancestor = findWindowAtDisplay (d, w->transientFor);
+		if (ancestor && !(ancestor->type & (CompWindowTypeDesktopMask | CompWindowTypeDockMask)))
+		{
+			moveInputFocusToWindow (ancestor);
+			focussedAny = TRUE;
+		}
     }
     else if (w->type & (CompWindowTypeDialogMask |
 			CompWindowTypeModalDialogMask))
     {
-	CompWindow *a, *focus = NULL;
+		CompWindow *a, *focus = NULL;
 
-	for (a = s->reverseWindows; a; a = a->prev)
-	{
-	    if (a->clientLeader != w->clientLeader)
-		continue;
+		for (a = s->reverseWindows; a; a = a->prev)
+		{
+			if (a->clientLeader != w->clientLeader)
+			continue;
 
-	    if (!(*s->focusWindow) (a))
-		continue;
+			if (!(*s->focusWindow) (a))
+			continue;
 
-	    if (!focus)
-	    {
-		focus = a;
-		continue;
-	    }
+			if (!focus)
+			{
+				focus = a;
+				continue;
+			}
 
-	    if (a->type & (CompWindowTypeNormalMask |
-			   CompWindowTypeDialogMask |
-			   CompWindowTypeModalDialogMask))
-	    {
-		if (compareWindowActiveness (focus, a) < 0)
-		    focus = a;
-	    }
-	}
+			if (a->type & (CompWindowTypeNormalMask |
+				   CompWindowTypeDialogMask |
+				   CompWindowTypeModalDialogMask))
+			{
+			if (compareWindowActiveness (focus, a) < 0)
+				focus = a;
+			}
+		}
 
-	if (focus && !(focus->type & (CompWindowTypeDesktopMask |
-				      CompWindowTypeDockMask)))
-	{
-	    moveInputFocusToWindow (focus);
-	    focussedAny = TRUE;
-	}
+		if (focus && !(focus->type & (CompWindowTypeDesktopMask | CompWindowTypeDockMask)))
+		{
+			moveInputFocusToWindow (focus);
+			focussedAny = TRUE;
+		}
     }
 
     if (!focussedAny)
@@ -188,8 +190,7 @@ autoRaiseTimeout (void *closure)
     CompDisplay *display = closure;
     CompWindow  *w = findWindowAtDisplay (display, display->activeWindow);
 
-    if (display->autoRaiseWindow == display->activeWindow ||
-	(w && (display->autoRaiseWindow == w->transientFor)))
+    if (display->autoRaiseWindow == display->activeWindow || (w && (display->autoRaiseWindow == w->transientFor)))
     {
 	w = findWindowAtDisplay (display, display->autoRaiseWindow);
 	if (w)
@@ -269,28 +270,32 @@ triggerButtonPressBindings (CompDisplay  *d,
 
     if (edgeWindow)
     {
-	CompScreen   *s;
-	unsigned int i;
+		CompScreen   *s;
+		unsigned int i;
 
-	s = findScreenAtDisplay (d, event->root);
-	if (!s)
-	    return FALSE;
+		s = findScreenAtDisplay (d, event->root);
+		if (!s)
+		{
+			return FALSE;
+		}
 
-	if (event->window != edgeWindow)
-	{
-	    if (!s->maxGrab || event->window != s->root)
-		return FALSE;
-	}
+		if (event->window != edgeWindow)
+		{
+			if (!s->maxGrab || event->window != s->root)
+			{
+				return FALSE;
+			}
+		}
 
-	for (i = 0; i < SCREEN_EDGE_NUM; i++)
-	{
-	    if (edgeWindow == s->screenEdge[i].id)
-	    {
-		edge = 1 << i;
-		argument[1].value.i = d->activeWindow;
-		break;
-	    }
-	}
+		for (i = 0; i < SCREEN_EDGE_NUM; i++)
+		{
+			if (edgeWindow == s->screenEdge[i].id)
+			{
+				edge = 1 << i;
+				argument[1].value.i = d->activeWindow;
+				break;
+			}
+		}
     }
 
     while (nOption--)
@@ -299,12 +304,15 @@ triggerButtonPressBindings (CompDisplay  *d,
 	{
 	    if (action->button.button == event->button)
 	    {
-		bindMods = virtualToRealModMask (d, action->button.modifiers);
+			bindMods = virtualToRealModMask (d, action->button.modifiers);
 
-		if ((bindMods & modMask) == (event->state & modMask))
-		    if ((*action->initiate) (d, action, state,
-					     argument, nArgument))
-			return TRUE;
+			if ((bindMods & modMask) == (event->state & modMask))
+			{
+				if ((*action->initiate) (d, action, state, argument, nArgument))
+				{
+					return TRUE;
+				}
+			}
 	    }
 	}
 
@@ -313,11 +321,9 @@ triggerButtonPressBindings (CompDisplay  *d,
 	    if (isInitiateBinding (option, CompBindingTypeEdgeButton,
 				   state | CompActionStateInitEdge, &action))
 	    {
-		if ((action->button.button == event->button) &&
-		    (action->edgeMask & edge))
+		if ((action->button.button == event->button) && (action->edgeMask & edge))
 		{
-		    bindMods = virtualToRealModMask (d,
-						     action->button.modifiers);
+		    bindMods = virtualToRealModMask (d, action->button.modifiers);
 
 		    if ((bindMods & modMask) == (event->state & modMask))
 			if ((*action->initiate) (d, action, state |
@@ -976,8 +982,8 @@ handleActionEvent (CompDisplay *d,
 		{
 		    if (edgeWindow == s->screenEdge[i].id)
 		    {
-			edge = 1 << i;
-			break;
+				edge = 1 << i;
+				break;
 		    }
 		}
 
@@ -1224,33 +1230,37 @@ handleEvent (CompDisplay *d,
 
     switch (event->type) {
     case ButtonPress:
-	s = findScreenAtDisplay (d, event->xbutton.root);
-	if (s)
-	    setCurrentOutput (s, outputDeviceForPoint (s,
-						       event->xbutton.x_root,
-						       event->xbutton.y_root));
-	break;
+		s = findScreenAtDisplay (d, event->xbutton.root);
+		if (s)
+		{
+			setCurrentOutput (s, outputDeviceForPoint (s, event->xbutton.x_root, event->xbutton.y_root));
+		}
+		break;
     case MotionNotify:
-	s = findScreenAtDisplay (d, event->xmotion.root);
-	if (s)
-	    setCurrentOutput (s, outputDeviceForPoint (s,
-						       event->xmotion.x_root,
-						       event->xmotion.y_root));
-	break;
+		s = findScreenAtDisplay (d, event->xmotion.root);
+		if (s)
+		{
+			setCurrentOutput (s, outputDeviceForPoint (s, event->xmotion.x_root, event->xmotion.y_root));
+		}
+		break;
     case KeyPress:
-	w = findWindowAtDisplay (d, d->activeWindow);
-	if (w)
-	    setCurrentOutput (w->screen, outputDeviceForWindow (w));
+		w = findWindowAtDisplay (d, d->activeWindow);
+		if (w)
+		{
+			setCurrentOutput (w->screen, outputDeviceForWindow (w));
+		}
     default:
 	break;
     }
 
     if (handleActionEvent (d, event))
     {
-	if (!d->screens->maxGrab)
-	    XAllowEvents (d->display, AsyncPointer, event->xbutton.time);
+		if (!d->screens->maxGrab)
+		{
+			XAllowEvents (d->display, AsyncPointer, event->xbutton.time);
+		}
 
-	return;
+		return;
     }
 
     switch (event->type) {
@@ -1348,8 +1358,8 @@ handleEvent (CompDisplay *d,
 	    /* been shaded */
 	    if (w->height == 0)
 	    {
-		if (w->id == d->activeWindow)
-		    moveInputFocusToWindow (w);
+			if (w->id == d->activeWindow)
+				moveInputFocusToWindow (w);
 	    }
 
 	    mapWindow (w);
@@ -1362,28 +1372,27 @@ handleEvent (CompDisplay *d,
 	    /* Normal -> Iconic */
 	    if (w->pendingUnmaps)
 	    {
-		setWmState (d, IconicState, w->id);
-		w->pendingUnmaps--;
+			setWmState (d, IconicState, w->id);
+			w->pendingUnmaps--;
 	    }
 	    else /* X -> Withdrawn */
 	    {
-		/* Iconic -> Withdrawn */
-		if (w->state & CompWindowStateHiddenMask)
-		{
-		    w->minimized = FALSE;
+			/* Iconic -> Withdrawn */
+			if (w->state & CompWindowStateHiddenMask)
+			{
+				w->minimized = FALSE;
 
-		    changeWindowState (w,
-				       w->state & ~CompWindowStateHiddenMask);
+				changeWindowState (w, w->state & ~CompWindowStateHiddenMask);
 
-		    updateClientListForScreen (w->screen);
-		}
+				updateClientListForScreen (w->screen);
+			}
 
-		if (!w->attrib.override_redirect)
-		    setWmState (d, WithdrawnState, w->id);
+			if (!w->attrib.override_redirect)
+				setWmState (d, WithdrawnState, w->id);
 
-		w->placed     = FALSE;
-		w->unmanaging = w->managed;
-		w->managed    = FALSE;
+			w->placed     = FALSE;
+			w->unmanaging = w->managed;
+			w->managed    = FALSE;
 	    }
 
 	    unmapWindow (w);
@@ -1450,36 +1459,36 @@ handleEvent (CompDisplay *d,
 	    w = findWindowAtDisplay (d, event->xproperty.window);
 	    if (w)
 	    {
-		unsigned int type;
+			unsigned int type;
 
-		type = getWindowType (d, w->id);
+			type = getWindowType (d, w->id);
 
-		if (type != w->wmType)
-		{
-		    if (w->attrib.map_state == IsViewable)
-		    {
-			if (w->type == CompWindowTypeDesktopMask)
-			    w->screen->desktopWindowCount--;
-			else if (type == CompWindowTypeDesktopMask)
-			    w->screen->desktopWindowCount++;
-		    }
+			if (type != w->wmType)
+			{
+				if (w->attrib.map_state == IsViewable)
+				{
+					if (w->type == CompWindowTypeDesktopMask)
+						w->screen->desktopWindowCount--;
+					else if (type == CompWindowTypeDesktopMask)
+						w->screen->desktopWindowCount++;
+				}
 
-		    w->wmType = type;
+				w->wmType = type;
 
-		    recalcWindowType (w);
-		    recalcWindowActions (w);
+				recalcWindowType (w);
+				recalcWindowActions (w);
 
-		    if (w->type & CompWindowTypeDesktopMask)
-			w->paint.opacity = OPAQUE;
+				if (w->type & CompWindowTypeDesktopMask)
+				w->paint.opacity = OPAQUE;
 
-		    if (type & (CompWindowTypeDockMask |
-				CompWindowTypeDesktopMask))
-			setDesktopForWindow (w, 0xffffffff);
+				if (type & (CompWindowTypeDockMask |
+					CompWindowTypeDesktopMask))
+				setDesktopForWindow (w, 0xffffffff);
 
-		    updateClientListForScreen (w->screen);
+				updateClientListForScreen (w->screen);
 
-		    (*d->matchPropertyChanged) (d, w);
-		}
+				(*d->matchPropertyChanged) (d, w);
+			}
 	    }
 	}
 	else if (event->xproperty.atom == d->winStateAtom)
@@ -1487,25 +1496,25 @@ handleEvent (CompDisplay *d,
 	    w = findWindowAtDisplay (d, event->xproperty.window);
 	    if (w && !w->managed)
 	    {
-		unsigned int state;
+			unsigned int state;
 
-		state = getWindowState (d, w->id);
-		state = constrainWindowState (state, w->actions);
+			state = getWindowState (d, w->id);
+			state = constrainWindowState (state, w->actions);
 
-		/* EWMH suggests that we ignore changes
-		   to _NET_WM_STATE_HIDDEN */
-		if (w->state & CompWindowStateHiddenMask)
-		    state |= CompWindowStateHiddenMask;
-		else
-		    state &= ~CompWindowStateHiddenMask;
+			/* EWMH suggests that we ignore changes
+			   to _NET_WM_STATE_HIDDEN */
+			if (w->state & CompWindowStateHiddenMask)
+				state |= CompWindowStateHiddenMask;
+			else
+				state &= ~CompWindowStateHiddenMask;
 
-		if (state != w->state)
-		{
-		    if (w->type & CompWindowTypeDesktopMask)
-			w->paint.opacity = OPAQUE;
+			if (state != w->state)
+			{
+				if (w->type & CompWindowTypeDesktopMask)
+				w->paint.opacity = OPAQUE;
 
-		    changeWindowState (w, state);
-		}
+				changeWindowState (w, state);
+			}
 	    }
 	}
 	else if (event->xproperty.atom == XA_WM_NORMAL_HINTS)
@@ -1580,15 +1589,14 @@ handleEvent (CompDisplay *d,
 	    w = findWindowAtDisplay (d, event->xproperty.window);
 	    if (w && w->screen->canDoSaturated)
 	    {
-		int saturation;
+			int saturation;
 
-		saturation = getWindowProp32 (d, w->id,
-					      d->winSaturationAtom, COLOR);
-		if (saturation != w->paint.saturation)
-		{
-		    w->paint.saturation = saturation;
-		    addWindowDamage (w);
-		}
+			saturation = getWindowProp32 (d, w->id, d->winSaturationAtom, COLOR);
+			if (saturation != w->paint.saturation)
+			{
+				w->paint.saturation = saturation;
+				addWindowDamage (w);
+			}
 	    }
 	}
 	else if (event->xproperty.atom == d->xBackgroundAtom[0] ||
@@ -1597,18 +1605,17 @@ handleEvent (CompDisplay *d,
 	    s = findScreenAtDisplay (d, event->xproperty.window);
 	    if (s)
 	    {
-		finiTexture (s, &s->backgroundTexture);
-		initTexture (s, &s->backgroundTexture);
+			finiTexture (s, &s->backgroundTexture);
+			initTexture (s, &s->backgroundTexture);
 
-		if (s->backgroundLoaded)
-		{
-		    s->backgroundLoaded = FALSE;
-		    damageScreen (s);
-		}
+			if (s->backgroundLoaded)
+			{
+				s->backgroundLoaded = FALSE;
+				damageScreen (s);
+			}
 	    }
 	}
-	else if (event->xproperty.atom == d->wmStrutAtom ||
-		 event->xproperty.atom == d->wmStrutPartialAtom)
+	else if (event->xproperty.atom == d->wmStrutAtom || event->xproperty.atom == d->wmStrutPartialAtom)
 	{
 	    w = findWindowAtDisplay (d, event->xproperty.window);
 	    if (w)
@@ -1622,9 +1629,9 @@ handleEvent (CompDisplay *d,
 	    w = findWindowAtDisplay (d, event->xproperty.window);
 	    if (w)
 	    {
-		getMwmHints (d, w->id, &w->mwmFunc, &w->mwmDecor);
+			getMwmHints (d, w->id, &w->mwmFunc, &w->mwmDecor);
 
-		recalcWindowActions (w);
+			recalcWindowActions (w);
 	    }
 	}
 	else if (event->xproperty.atom == d->wmProtocolsAtom)
@@ -1841,15 +1848,15 @@ handleEvent (CompDisplay *d,
 	    s = findScreenAtDisplay (d, event->xclient.window);
 	    if (s)
 	    {
-		CompOptionValue value;
+			CompOptionValue value;
 
-		value.i = event->xclient.data.l[0] / s->width;
+			value.i = event->xclient.data.l[0] / s->width;
 
-		(*core.setOptionForPlugin) (&s->base, "core", "hsize", &value);
+			(*core.setOptionForPlugin) (&s->base, "core", "hsize", &value);
 
-		value.i = event->xclient.data.l[1] / s->height;
+			value.i = event->xclient.data.l[1] / s->height;
 
-		(*core.setOptionForPlugin) (&s->base, "core", "vsize", &value);
+			(*core.setOptionForPlugin) (&s->base, "core", "vsize", &value);
 	    }
 	}
 	else if (event->xclient.message_type == d->moveResizeWindowAtom)

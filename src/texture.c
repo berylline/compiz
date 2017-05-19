@@ -39,9 +39,7 @@ static CompMatrix _identity_matrix = {
     0.0f, 0.0f
 };
 
-void
-initTexture (CompScreen  *screen,
-	     CompTexture *texture)
+void initTexture(CompScreen *screen, CompTexture *texture)
 {
     texture->refCount	= 1;
     texture->name	= 0;
@@ -54,43 +52,42 @@ initTexture (CompScreen  *screen,
     texture->mipmap	= FALSE;
 }
 
-void
-finiTexture (CompScreen  *screen,
-	     CompTexture *texture)
+void finiTexture(CompScreen *screen, CompTexture *texture)
 {
-    if (texture->name)
+    if(texture->name)
     {
-	makeScreenCurrent (screen);
-	releasePixmapFromTexture (screen, texture);
-	glDeleteTextures (1, &texture->name);
+		makeScreenCurrent(screen);
+		releasePixmapFromTexture(screen, texture);
+		glDeleteTextures(1, &texture->name);
     }
 }
 
-CompTexture *
-createTexture (CompScreen *screen)
+CompTexture *createTexture(CompScreen *screen)
 {
     CompTexture *texture;
 
-    texture = (CompTexture *) malloc (sizeof (CompTexture));
-    if (!texture)
-	return NULL;
+    texture = (CompTexture *) malloc(sizeof(CompTexture));
+    if(!texture)
+    {
+		return NULL;
+    }
 
-    initTexture (screen, texture);
+    initTexture(screen, texture);
 
     return texture;
 }
 
-void
-destroyTexture (CompScreen  *screen,
-		CompTexture *texture)
+void destroyTexture(CompScreen *screen, CompTexture *texture)
 {
     texture->refCount--;
-    if (texture->refCount)
-	return;
+    if(texture->refCount)
+    {
+		return;
+    }
 
-    finiTexture (screen, texture);
+    finiTexture(screen, texture);
 
-    free (texture);
+    free(texture);
 }
 
 static Bool
@@ -108,60 +105,59 @@ imageToTexture (CompScreen   *screen,
 
     data = malloc (4 * width * height);
     if (!data)
-	return FALSE;
+	{
+		return FALSE;
+	}
 
     for (i = 0; i < height; i++)
-	memcpy (&data[i * width * 4],
-		&image[(height - i - 1) * width * 4],
-		width * 4);
+	{
+		memcpy (&data[i * width * 4], &image[(height - i - 1) * width * 4], width * 4);
+	}
 
     makeScreenCurrent (screen);
     releasePixmapFromTexture (screen, texture);
 
-    if (screen->textureNonPowerOfTwo ||
-	(POWER_OF_TWO (width) && POWER_OF_TWO (height)))
+    if (screen->textureNonPowerOfTwo || (POWER_OF_TWO (width) && POWER_OF_TWO (height)))
     {
-	texture->target = GL_TEXTURE_2D;
-	texture->matrix.xx = 1.0f / width;
-	texture->matrix.yy = -1.0f / height;
-	texture->matrix.y0 = 1.0f;
-	texture->mipmap = TRUE;
+		texture->target = GL_TEXTURE_2D;
+		texture->matrix.xx = 1.0f / width;
+		texture->matrix.yy = -1.0f / height;
+		texture->matrix.y0 = 1.0f;
+		texture->mipmap = TRUE;
     }
     else
     {
-	texture->target = GL_TEXTURE_RECTANGLE_NV;
-	texture->matrix.xx = 1.0f;
-	texture->matrix.yy = -1.0f;
-	texture->matrix.y0 = height;
-	texture->mipmap = FALSE;
+		texture->target = GL_TEXTURE_RECTANGLE_NV;
+		texture->matrix.xx = 1.0f;
+		texture->matrix.yy = -1.0f;
+		texture->matrix.y0 = height;
+		texture->mipmap = FALSE;
     }
 
     if (!texture->name)
-	glGenTextures (1, &texture->name);
+	{
+		glGenTextures (1, &texture->name);
+	}
 
     glBindTexture (texture->target, texture->name);
 
-    internalFormat =
-	(screen->opt[COMP_SCREEN_OPTION_TEXTURE_COMPRESSION].value.b &&
-	 screen->textureCompression ?
-	 GL_COMPRESSED_RGBA_ARB : GL_RGBA);
+    internalFormat = (screen->opt[COMP_SCREEN_OPTION_TEXTURE_COMPRESSION].value.b && screen->textureCompression ? GL_COMPRESSED_RGBA_ARB : GL_RGBA);
 
-    glTexImage2D (texture->target, 0, internalFormat, width, height, 0,
-		  format, type, data);
+    glTexImage2D (texture->target, 0, internalFormat, width, height, 0, format, type, data);
 
     texture->filter = GL_NEAREST;
 
-    glTexParameteri (texture->target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (texture->target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(texture->target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(texture->target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glTexParameteri (texture->target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri (texture->target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(texture->target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(texture->target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     texture->wrap = GL_CLAMP_TO_EDGE;
 
-    glBindTexture (texture->target, 0);
+    glBindTexture(texture->target, 0);
 
-    free (data);
+    free(data);
 
     return TRUE;
 }
@@ -206,18 +202,23 @@ readImageToTexture (CompScreen   *screen,
     int  width, height;
     Bool status;
 
-    if (!readImageFromFile (screen->display, imageFileName,
-			    &width, &height, &image))
-	return FALSE;
+    if (!readImageFromFile (screen->display, imageFileName, &width, &height, &image))
+	{
+		return FALSE;
+	}
 
     status = imageBufferToTexture (screen, texture, image, width, height);
 
     free (image);
 
     if (returnWidth)
-	*returnWidth = width;
+	{
+		*returnWidth = width;
+	}
     if (returnHeight)
-	*returnHeight = height;
+	{
+		*returnHeight = height;
+	}
 
     return status;
 }
@@ -246,11 +247,11 @@ bindPixmapToTexture (CompScreen  *screen,
 
     if (!config->fbConfig)
     {
-	compLogMessage ("core", CompLogLevelWarn,
-			"No GLXFBConfig for depth %d",
-			depth);
+		compLogMessage ("core", CompLogLevelWarn,
+				"No GLXFBConfig for depth %d",
+				depth);
 
-	return FALSE;
+		return FALSE;
     }
 
     attribs[i++] = GLX_TEXTURE_FORMAT_EXT;

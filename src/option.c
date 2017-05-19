@@ -196,19 +196,27 @@ compSetStringOption (CompOption	     *option,
 
     s = value->s;
     if (!s)
-	s = "";
+	{
+		s = "";
+	}
 
     if (option->value.s == s)
-	return FALSE;
+	{
+		return FALSE;
+	}
 
     if (option->value.s && s)
     {
-	if (strcmp (option->value.s, s) == 0)
-	    return FALSE;
+		if (strcmp (option->value.s, s) == 0)
+		{
+			return FALSE;
+		}
     }
 
     if (option->value.s)
-	free (option->value.s);
+	{
+		free (option->value.s);
+	}
 
     option->value.s = strdup (s);
 
@@ -220,7 +228,9 @@ compSetColorOption (CompOption	    *option,
 		    CompOptionValue *value)
 {
     if (memcmp (value->c, option->value.c, sizeof (value->c)) == 0)
-	return FALSE;
+	{
+		return FALSE;
+	}
 
     memcpy (option->value.c, value->c, sizeof (value->c));
 

@@ -90,16 +90,24 @@ setCloneRestartCommands (SmcConn connection)
        to the SM, so allocate for that case */
     args = malloc ((programArgc + 2) * sizeof (char *));
     if (!args)
-	return;
+	{
+		return;
+	}
 
     for (i = 0; i < programArgc; i++)
     {
-	if (strcmp (programArgv[i], "--sm-client-id") == 0)
-	    i++; /* skip old client id, we'll add the new one later */
-	else if (strcmp (programArgv[i], "--replace") == 0)
-	    continue; /* there's nothing to replace when starting session */
-	else
-	    args[count++] = programArgv[i];
+		if (strcmp (programArgv[i], "--sm-client-id") == 0)
+		{
+			i++; /* skip old client id, we'll add the new one later */
+		}
+		else if (strcmp (programArgv[i], "--replace") == 0)
+		{
+			continue; /* there's nothing to replace when starting session */
+		}
+		else
+		{
+			args[count++] = programArgv[i];
+		}
     }
 
     setStringListProperty (connection, SmCloneCommand, args, count);
@@ -107,10 +115,12 @@ setCloneRestartCommands (SmcConn connection)
     /* insert new client id at position 1 and 2;
        position 0 is the executable name */
     for (i = count - 1; i >= 1; i--)
-	args[i + 2] = args[i];
-    args[1] = "--sm-client-id";
-    args[2] = smClientId;
-    count += 2;
+	{
+		args[i + 2] = args[i];
+		args[1] = "--sm-client-id";
+		args[2] = smClientId;
+		count += 2;
+	}
 
     setStringListProperty (connection, SmRestartCommand, args, count);
 
@@ -171,14 +181,14 @@ setProgramInfo (SmcConn    connection,
     pw = getpwuid (uid);
     if (pw)
     {
-	userProp.name     = SmUserID;
-	userProp.type     = SmARRAY8;
-	userProp.num_vals = 1;
-	userProp.vals     = &userVal;
-	userVal.value     = (SmPointer) pw->pw_name;
-	userVal.length    = strlen (pw->pw_name);
+		userProp.name     = SmUserID;
+		userProp.type     = SmARRAY8;
+		userProp.num_vals = 1;
+		userProp.vals     = &userVal;
+		userVal.value     = (SmPointer) pw->pw_name;
+		userVal.length    = strlen (pw->pw_name);
 
-	props[count++] = &userProp;
+		props[count++] = &userProp;
     }
 
     SmcSetProperties (connection, count, props);
@@ -249,45 +259,47 @@ initSession (char *prevClientId)
 
     if (getenv ("SESSION_MANAGER"))
     {
-	char errorBuffer[1024];
+		char errorBuffer[1024];
 
-	iceInit ();
+		iceInit ();
 
-	callbacks.save_yourself.callback    = saveYourselfCallback;
-	callbacks.save_yourself.client_data = NULL;
+		callbacks.save_yourself.callback    = saveYourselfCallback;
+		callbacks.save_yourself.client_data = NULL;
 
-	callbacks.die.callback	  = dieCallback;
-	callbacks.die.client_data = NULL;
+		callbacks.die.callback	  = dieCallback;
+		callbacks.die.client_data = NULL;
 
-	callbacks.save_complete.callback    = saveCompleteCallback;
-	callbacks.save_complete.client_data = NULL;
+		callbacks.save_complete.callback    = saveCompleteCallback;
+		callbacks.save_complete.client_data = NULL;
 
-	callbacks.shutdown_cancelled.callback	 = shutdownCancelledCallback;
-	callbacks.shutdown_cancelled.client_data = NULL;
+		callbacks.shutdown_cancelled.callback	 = shutdownCancelledCallback;
+		callbacks.shutdown_cancelled.client_data = NULL;
 
-	smcConnection = SmcOpenConnection (NULL,
-					   NULL,
-					   SmProtoMajor,
-					   SmProtoMinor,
-					   SmcSaveYourselfProcMask |
-					   SmcDieProcMask	   |
-					   SmcSaveCompleteProcMask |
-					   SmcShutdownCancelledProcMask,
-					   &callbacks,
-					   prevClientId,
-					   &smClientId,
-					   sizeof (errorBuffer),
-					   errorBuffer);
-	if (!smcConnection)
-	    compLogMessage ("core", CompLogLevelWarn,
-			    "SmcOpenConnection failed: %s",
-			    errorBuffer);
-	else
-	{
-	    connected = TRUE;
-	    if (prevClientId)
-		smPrevClientId = strdup (prevClientId);
-	}
+		smcConnection = SmcOpenConnection (NULL,
+						   NULL,
+						   SmProtoMajor,
+						   SmProtoMinor,
+						   SmcSaveYourselfProcMask |
+						   SmcDieProcMask	   |
+						   SmcSaveCompleteProcMask |
+						   SmcShutdownCancelledProcMask,
+						   &callbacks,
+						   prevClientId,
+						   &smClientId,
+						   sizeof (errorBuffer),
+						   errorBuffer);
+		if (!smcConnection)
+		{
+			compLogMessage ("core", CompLogLevelWarn, "SmcOpenConnection failed: %s", errorBuffer);
+		}
+		else
+		{
+			connected = TRUE;
+			if (prevClientId)
+			{
+				smPrevClientId = strdup (prevClientId);
+			}
+		}
     }
 }
 
@@ -296,20 +308,22 @@ closeSession (void)
 {
     if (connected)
     {
-	setRestartStyle (smcConnection, SmRestartIfRunning);
+		setRestartStyle (smcConnection, SmRestartIfRunning);
 
-	if (SmcCloseConnection (smcConnection, 0, NULL) != SmcConnectionInUse)
-	    connected = FALSE;
-	if (smClientId)
-	{
-	    free (smClientId);
-	    smClientId = NULL;
-	}
-	if (smPrevClientId)
-	{
-	    free (smPrevClientId);
-	    smPrevClientId = NULL;
-	}
+		if (SmcCloseConnection (smcConnection, 0, NULL) != SmcConnectionInUse)
+		{
+			connected = FALSE;
+		}
+		if (smClientId)
+		{
+			free (smClientId);
+			smClientId = NULL;
+		}
+		if (smPrevClientId)
+		{
+			free (smPrevClientId);
+			smPrevClientId = NULL;
+		}
     }
 }
 
@@ -325,18 +339,24 @@ char *
 getSessionClientId (CompSessionClientIdType type)
 {
     if (!connected)
-	return NULL;
+	{
+		return NULL;
+	}
 
     switch (type) {
     case CompSessionClientId:
-	if (smClientId)
-	    return strdup (smClientId);
-	break;
+		if (smClientId)
+		{
+			return strdup (smClientId);
+		}
+		break;
 
     case CompSessionPrevClientId:
-	if (smPrevClientId)
-	    return strdup (smPrevClientId);
-	break;
+		if (smPrevClientId)
+		{
+			return strdup (smPrevClientId);
+		}
+		break;
     }
 
     return NULL;
@@ -358,11 +378,11 @@ iceProcessMessages (void *data)
 
     if (status == IceProcessMessagesIOError)
     {
-	SM_DEBUG (printf ("ICE connection process messages"
-			  " - error => shutting down the connection\n"));
+		SM_DEBUG (printf ("ICE connection process messages"
+				  " - error => shutting down the connection\n"));
 
-	IceSetShutdownNegotiation (connection, False);
-	IceCloseConnection (connection);
+		IceSetShutdownNegotiation (connection, False);
+		IceCloseConnection (connection);
     }
 
     return 1;
@@ -378,31 +398,31 @@ iceNewConnection (IceConn    connection,
 {
     if (opening)
     {
-	SM_DEBUG (printf ("ICE connection opening\n"));
+		SM_DEBUG (printf ("ICE connection opening\n"));
 
-	/* Make sure we don't pass on these file descriptors to any
-	   exec'ed children */
-	fcntl (IceConnectionNumber (connection), F_SETFD,
-	       fcntl (IceConnectionNumber (connection),
-		      F_GETFD,0) | FD_CLOEXEC);
+		/* Make sure we don't pass on these file descriptors to any
+		   exec'ed children */
+		fcntl (IceConnectionNumber (connection), F_SETFD,
+			   fcntl (IceConnectionNumber (connection),
+				  F_GETFD,0) | FD_CLOEXEC);
 
-	iceWatchFdHandle = compAddWatchFd (IceConnectionNumber (connection),
-					   POLLIN | POLLPRI | POLLHUP | POLLERR,
-					   iceProcessMessages, connection);
+		iceWatchFdHandle = compAddWatchFd (IceConnectionNumber (connection),
+						   POLLIN | POLLPRI | POLLHUP | POLLERR,
+						   iceProcessMessages, connection);
 
-	iceConnected = 1;
+		iceConnected = 1;
     }
     else
     {
-	SM_DEBUG (printf ("ICE connection closing\n"));
+		SM_DEBUG (printf ("ICE connection closing\n"));
 
-	if (iceConnected)
-	{
-	    compRemoveWatchFd (iceWatchFdHandle);
+		if (iceConnected)
+		{
+			compRemoveWatchFd (iceWatchFdHandle);
 
-	    iceWatchFdHandle = 0;
-	    iceConnected = 0;
-	}
+			iceWatchFdHandle = 0;
+			iceConnected = 0;
+		}
     }
 }
 
@@ -412,7 +432,9 @@ static void
 iceErrorHandler (IceConn connection)
 {
     if (oldIceHandler)
-	(*oldIceHandler) (connection);
+	{
+		(*oldIceHandler) (connection);
+	}
 }
 
 /* We call any handler installed before (or after) iceInit but
@@ -424,16 +446,18 @@ iceInit (void)
 
     if (!iceInitialized)
     {
-	IceIOErrorHandler defaultIceHandler;
+		IceIOErrorHandler defaultIceHandler;
 
-	oldIceHandler	  = IceSetIOErrorHandler (NULL);
-	defaultIceHandler = IceSetIOErrorHandler (iceErrorHandler);
+		oldIceHandler	  = IceSetIOErrorHandler (NULL);
+		defaultIceHandler = IceSetIOErrorHandler (iceErrorHandler);
 
-	if (oldIceHandler == defaultIceHandler)
-	    oldIceHandler = NULL;
+		if (oldIceHandler == defaultIceHandler)
+		{
+			oldIceHandler = NULL;
+		}
 
-	IceAddConnectionWatch (iceNewConnection, NULL);
+		IceAddConnectionWatch (iceNewConnection, NULL);
 
-	iceInitialized = 1;
+		iceInitialized = 1;
     }
 }

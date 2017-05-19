@@ -97,16 +97,17 @@ static CompPluginVTable coreVTable = {
     coreSetObjectOption
 };
 
-static Bool
-cloaderLoadPlugin (CompPlugin *p,
-		   const char *path,
-		   const char *name)
+static Bool cloaderLoadPlugin(CompPlugin *p, const char *path, const char *name)
 {
-    if (path)
-	return FALSE;
+    if(path)
+    {
+		return FALSE;
+    }
 
-    if (strcmp (name, coreVTable.name))
-	return FALSE;
+    if(strcmp(name, coreVTable.name))
+    {
+		return FALSE;
+    }
 
     p->vTable	      = &coreVTable;
     p->devPrivate.ptr = NULL;
@@ -115,29 +116,30 @@ cloaderLoadPlugin (CompPlugin *p,
     return TRUE;
 }
 
-static void
-cloaderUnloadPlugin (CompPlugin *p)
+static void cloaderUnloadPlugin(CompPlugin *p)
 {
 }
 
-static char **
-cloaderListPlugins (const char *path,
-		    int	       *n)
+static char **cloaderListPlugins(const char *path, int *n)
 {
     char **list;
 
-    if (path)
-	return 0;
-
-    list = malloc (sizeof (char *));
-    if (!list)
-	return 0;
-
-    *list = strdup (coreVTable.name);
-    if (!*list)
+    if(path)
     {
-	free (list);
-	return 0;
+		return 0;
+    }
+
+    list = malloc(sizeof(char *));
+    if(!list)
+    {
+		return 0;
+    }
+
+    *list = strdup(coreVTable.name);
+    if(!*list)
+    {
+		free(list);
+		return 0;
     }
 
     *n = 1;
@@ -145,84 +147,90 @@ cloaderListPlugins (const char *path,
     return list;
 }
 
-static Bool
-dlloaderLoadPlugin (CompPlugin *p,
-		    const char *path,
-		    const char *name)
+static Bool dlloaderLoadPlugin(CompPlugin *p, const char *path, const char *name)
 {
     char        *file;
     void        *dlhand;
     struct stat fileInfo;
     Bool        loaded = FALSE;
 
-    if (cloaderLoadPlugin (p, path, name))
-	return TRUE;
-
-    file = malloc ((path ? strlen (path) : 0) + strlen (name) + 8);
-    if (!file)
-	return FALSE;
-
-    if (path)
-	sprintf (file, "%s/lib%s.so", path, name);
-    else
-	sprintf (file, "lib%s.so", name);
-
-    if (stat (file, &fileInfo) != 0)
+    if(cloaderLoadPlugin(p, path, name))
     {
-	/* file likely not present */
-	compLogMessage ("core", CompLogLevelDebug,
-			"Could not stat() file %s : %s",
-			file, strerror (errno));
-	free (file);
-	return FALSE;
+		return TRUE;
     }
 
-    dlhand = dlopen (file, RTLD_LAZY);
-    if (dlhand)
+    file = malloc((path ? strlen(path) : 0) + strlen(name) + 8);
+    if(!file)
     {
-	PluginGetInfoProc getInfo;
-	char		  *error;
+		return FALSE;
+    }
 
-	dlerror ();
+    if(path)
+    {
+		sprintf(file, "%s/lib%s.so", path, name);
+    }
+    else
+    {
+		sprintf(file, "lib%s.so", name);
+    }
 
-	getInfo = (PluginGetInfoProc) dlsym (dlhand,
-					     "getCompPluginInfo20070830");
+    if(stat(file, &fileInfo) != 0)
+    {
+		/* file likely not present */
+		compLogMessage ("core", CompLogLevelDebug,
+				"Could not stat() file %s : %s",
+				file, strerror (errno));
+		free(file);
+		return FALSE;
+    }
 
-	error = dlerror ();
-	if (error)
-	{
-	    compLogMessage ("core", CompLogLevelError, "dlsym: %s", error);
+    dlhand = dlopen(file, RTLD_LAZY);
+    if(dlhand)
+    {
+		PluginGetInfoProc getInfo;
+		char		  *error;
 
-	    getInfo = 0;
-	}
+		dlerror();
 
-	if (getInfo)
-	{
-	    p->vTable = (*getInfo) ();
-	    if (!p->vTable)
-	    {
+		getInfo = (PluginGetInfoProc) dlsym(dlhand, "getCompPluginInfo20070830");
+
+		error = dlerror();
+		if(error)
+		{
+			compLogMessage("core", CompLogLevelError, "dlsym: %s", error);
+
+			getInfo = 0;
+		}
+
+		if(getInfo)
+		{
+			p->vTable = (*getInfo) ();
+			if(!p->vTable)
+			{
+				compLogMessage ("core", CompLogLevelError,
+						"Couldn't get vtable from '%s' plugin",
+						file);
+			}
+			else
+			{
+				p->devPrivate.ptr = dlhand;
+				p->devType	  = "dlloader";
+				loaded		  = TRUE;
+			}
+		}
+    }
+    else
+    {
 		compLogMessage ("core", CompLogLevelError,
-				"Couldn't get vtable from '%s' plugin",
-				file);
-	    }
-	    else
-	    {
-		p->devPrivate.ptr = dlhand;
-		p->devType	  = "dlloader";
-		loaded		  = TRUE;
-	    }
-	}
+				"Couldn't load plugin '%s' : %s", file, dlerror ());
     }
-    else
+
+    free(file);
+
+    if(!loaded && dlhand)
     {
-	compLogMessage ("core", CompLogLevelError,
-			"Couldn't load plugin '%s' : %s", file, dlerror ());
+		dlclose (dlhand);
     }
-
-    free (file);
-
-    if (!loaded && dlhand)
-	dlclose (dlhand);
 
     return loaded;
 }
@@ -231,9 +239,13 @@ static void
 dlloaderUnloadPlugin (CompPlugin *p)
 {
     if (strcmp (p->devType, "dlloader") == 0)
-	dlclose (p->devPrivate.ptr);
+	{
+		dlclose (p->devPrivate.ptr);
+	}
     else
-	cloaderUnloadPlugin (p);
+	{
+		cloaderUnloadPlugin (p);
+	}
 }
 
 static int
@@ -242,11 +254,14 @@ dlloaderFilter (const struct dirent *name)
     int length = strlen (name->d_name);
 
     if (length < 7)
-	return 0;
+	{
+		return 0;
+	}
 
-    if (strncmp (name->d_name, "lib", 3) ||
-	strncmp (name->d_name + length - 3, ".so", 3))
-	return 0;
+    if (strncmp (name->d_name, "lib", 3) || strncmp (name->d_name + length - 3, ".so", 3))
+	{
+		return 0;
+	}
 
     return 1;
 }
@@ -277,23 +292,23 @@ dlloaderListPlugins (const char *path,
 
     for (i = 0; i < nFile; i++)
     {
-	length = strlen (nameList[i]->d_name);
+		length = strlen (nameList[i]->d_name);
 
-	name = malloc ((length - 5) * sizeof (char));
-	if (name)
-	{
-	    strncpy (name, nameList[i]->d_name + 3, length - 6);
-	    name[length - 6] = '\0';
+		name = malloc ((length - 5) * sizeof (char));
+		if (name)
+		{
+			strncpy (name, nameList[i]->d_name + 3, length - 6);
+			name[length - 6] = '\0';
 
-	    list[j++] = name;
-	}
+			list[j++] = name;
+		}
     }
 
     if (j)
     {
-	*n = j;
+		*n = j;
 
-	return list;
+		return list;
     }
 
     free (list);
@@ -338,9 +353,9 @@ initObjectsWithType (CompObjectType type,
 
     if (!compObjectForEach (parent, type, initObjectTree, (void *) &ctx))
     {
-	compObjectForEach (parent, type, finiObjectTree, (void *) &ctx);
+		compObjectForEach (parent, type, finiObjectTree, (void *) &ctx);
 
-	return FALSE;
+		return FALSE;
     }
 
     return TRUE;
@@ -356,7 +371,9 @@ finiObjectsWithType (CompObjectType type,
 
     /* pCtx->type is set to the object type that failed to be initialized */
     if (pCtx->type == type)
-	return FALSE;
+	{
+		return FALSE;
+	}
 
     ctx.plugin = pCtx->plugin;
     ctx.object = NULL;
@@ -378,12 +395,12 @@ initObjectTree (CompObject *object,
 
     if (p->vTable->initObject)
     {
-	if (!(*p->vTable->initObject) (p, object))
-	{
-	    compLogMessage (p->vTable->name, CompLogLevelError,
-			    "InitObject failed");
-	    return FALSE;
-	}
+		if (!(*p->vTable->initObject) (p, object))
+		{
+			compLogMessage (p->vTable->name, CompLogLevelError,
+					"InitObject failed");
+			return FALSE;
+		}
     }
 
     ctx.plugin = p;
@@ -392,22 +409,26 @@ initObjectTree (CompObject *object,
     /* initialize children */
     if (!compObjectForEachType (object, initObjectsWithType, (void *) &ctx))
     {
-	compObjectForEachType (object, finiObjectsWithType, (void *) &ctx);
+		compObjectForEachType (object, finiObjectsWithType, (void *) &ctx);
 
-	if (p->vTable->initObject && p->vTable->finiObject)
-	    (*p->vTable->finiObject) (p, object);
+		if (p->vTable->initObject && p->vTable->finiObject)
+		{
+			(*p->vTable->finiObject) (p, object);
+		}
 
-	return FALSE;
+		return FALSE;
     }
 
     if (!(*core.initPluginForObject) (p, object))
     {
-	compObjectForEachType (object, finiObjectsWithType, (void *) &ctx);
+		compObjectForEachType (object, finiObjectsWithType, (void *) &ctx);
 
-	if (p->vTable->initObject && p->vTable->finiObject)
-	    (*p->vTable->finiObject) (p, object);
+		if (p->vTable->initObject && p->vTable->finiObject)
+		{
+			(*p->vTable->finiObject) (p, object);
+		}
 
-	return FALSE;
+		return FALSE;
     }
 
     return TRUE;
@@ -423,7 +444,9 @@ finiObjectTree (CompObject *object,
 
     /* pCtx->object is set to the object that failed to be initialized */
     if (pCtx->object == object)
-	return FALSE;
+	{
+		return FALSE;
+	}
 
     ctx.plugin = p;
     ctx.type   = ~0;
@@ -431,7 +454,9 @@ finiObjectTree (CompObject *object,
     compObjectForEachType (object, finiObjectsWithType, (void *) &ctx);
 
     if (p->vTable->initObject && p->vTable->finiObject)
-	(*p->vTable->finiObject) (p, object);
+	{
+		(*p->vTable->finiObject) (p, object);
+	}
 
     (*core.finiPluginForObject) (p, object);
 
@@ -445,9 +470,9 @@ initPlugin (CompPlugin *p)
 
     if (!(*p->vTable->init) (p))
     {
-	compLogMessage ("core", CompLogLevelError,
-			"InitPlugin '%s' failed", p->vTable->name);
-	return FALSE;
+		compLogMessage ("core", CompLogLevelError,
+				"InitPlugin '%s' failed", p->vTable->name);
+		return FALSE;
     }
 
     ctx.plugin = p;
@@ -455,8 +480,8 @@ initPlugin (CompPlugin *p)
 
     if (!initObjectTree (&core.base, (void *) &ctx))
     {
-	(*p->vTable->fini) (p);
-	return FALSE;
+		(*p->vTable->fini) (p);
+		return FALSE;
     }
 
     return TRUE;
@@ -521,9 +546,9 @@ objectFiniPlugins (CompObject *o)
 
     for (p = plugins; p; p = p->next)
     {
-	ctx.plugin = p;
+		ctx.plugin = p;
 
-	finiObjectTree (o, (void *) &ctx);
+		finiObjectTree (o, (void *) &ctx);
     }
 }
 
@@ -534,30 +559,32 @@ findActivePlugin (const char *name)
 
     for (p = plugins; p; p = p->next)
     {
-	if (strcmp (p->vTable->name, name) == 0)
-	    return p;
+		if (strcmp (p->vTable->name, name) == 0)
+		{
+			return p;
+		}
     }
 
     return 0;
 }
 
-void
-unloadPlugin (CompPlugin *p)
+void unloadPlugin(CompPlugin *p)
 {
     (*loaderUnloadPlugin) (p);
     free (p);
 }
 
-CompPlugin *
-loadPlugin (const char *name)
+CompPlugin *loadPlugin(const char *name)
 {
     CompPlugin *p;
     char       *home, *plugindir;
     Bool       status;
 
-    p = malloc (sizeof (CompPlugin));
-    if (!p)
-	return 0;
+    p = malloc(sizeof(CompPlugin));
+    if(!p)
+    {
+		return 0;
+    }
 
     p->next	       = 0;
     p->devPrivate.uval = 0;
@@ -580,17 +607,21 @@ loadPlugin (const char *name)
     }
 
     status = (*loaderLoadPlugin) (p, PLUGINDIR, name);
-    if (status)
+    if(status)
+    {
 	return p;
+    }
 
     status = (*loaderLoadPlugin) (p, NULL, name);
-    if (status)
+    if(status)
+    {
 	return p;
+    }
 
     compLogMessage ("core", CompLogLevelError,
 		    "Couldn't load plugin '%s'", name);
 
-    free (p);
+    free(p);
 
     return 0;
 }

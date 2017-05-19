@@ -38,9 +38,11 @@ reallocCorePrivate (int  size,
 {
     void *privates;
 
-    privates = realloc (core.base.privates, size * sizeof (CompPrivate));
+    privates = realloc(core.base.privates, size * sizeof(CompPrivate));
     if (!privates)
-	return FALSE;
+	{
+		return FALSE;
+	}
 
     core.base.privates = (CompPrivate *) privates;
 
@@ -118,8 +120,10 @@ setOptionForPlugin (CompObject      *object,
     CompPlugin *p;
 
     p = findActivePlugin (plugin);
-    if (p && p->vTable->setObjectOption)
-	return (*p->vTable->setObjectOption) (p, object, name, value);
+    if(p && p->vTable->setObjectOption)
+	{
+		return (*p->vTable->setObjectOption) (p, object, name, value);
+	}
 
     return FALSE;
 }
@@ -150,24 +154,25 @@ fileWatchRemoved (CompCore      *core,
 {
 }
 
-CompBool
-initCore (void)
+CompBool initCore(void)
 {
     CompPlugin *corePlugin;
 
-    compObjectInit (&core.base, 0, COMP_OBJECT_TYPE_CORE);
+    compObjectInit(&core.base, 0, COMP_OBJECT_TYPE_CORE);
 
     core.displays = NULL;
 
-    core.tmpRegion = XCreateRegion ();
-    if (!core.tmpRegion)
-	return FALSE;
-
-    core.outputRegion = XCreateRegion ();
-    if (!core.outputRegion)
+    core.tmpRegion = XCreateRegion();
+    if(!core.tmpRegion)
     {
-	XDestroyRegion (core.tmpRegion);
-	return FALSE;
+		return FALSE;
+    }
+
+    core.outputRegion = XCreateRegion();
+    if(!core.outputRegion)
+    {
+		XDestroyRegion(core.tmpRegion);
+		return FALSE;
     }
 
     core.fileWatch	     = NULL;
@@ -181,7 +186,7 @@ initCore (void)
     core.watchPollFds	   = NULL;
     core.nWatchFds	   = 0;
 
-    gettimeofday (&core.lastTimeout, 0);
+    gettimeofday(&core.lastTimeout, 0);
 
     core.initPluginForObject = initCorePluginForObject;
     core.finiPluginForObject = finiCorePluginForObject;
@@ -197,66 +202,72 @@ initCore (void)
     core.sessionEvent = sessionEvent;
     core.logMessage   = logMessage;
 
-    corePlugin = loadPlugin ("core");
-    if (!corePlugin)
+    corePlugin = loadPlugin("core");
+    if(!corePlugin)
     {
-	compLogMessage ("core", CompLogLevelFatal,
-			"Couldn't load core plugin");
-	return FALSE;
+		compLogMessage("core", CompLogLevelFatal, "Couldn't load core plugin");
+		return FALSE;
     }
 
-    if (!pushPlugin (corePlugin))
+    if(!pushPlugin(corePlugin))
     {
-	compLogMessage ("core", CompLogLevelFatal,
-			"Couldn't activate core plugin");
-	return FALSE;
+		compLogMessage("core", CompLogLevelFatal, "Couldn't activate core plugin");
+		return FALSE;
     }
 
     return TRUE;
 }
 
-void
-finiCore (void)
+void finiCore(void)
 {
     CompPlugin *p;
 
-    while (core.displays)
-	removeDisplay (core.displays);
+    while(core.displays)
+    {
+		removeDisplay(core.displays);
+    }
 
-    if (core.watchPollFds)
-	free (core.watchPollFds);
+    if(core.watchPollFds)
+    {
+		free(core.watchPollFds);
+    }
 
-    while ((p = popPlugin ()))
-	unloadPlugin (p);
+    while((p = popPlugin()))
+    {
+		unloadPlugin(p);
+    }
 
-    XDestroyRegion (core.outputRegion);
-    XDestroyRegion (core.tmpRegion);
+    XDestroyRegion(core.outputRegion);
+    XDestroyRegion(core.tmpRegion);
 }
 
-void
-addDisplayToCore (CompDisplay *d)
+void addDisplayToCore(CompDisplay *d)
 {
     CompDisplay *prev;
 
-    for (prev = core.displays; prev && prev->next; prev = prev->next);
+    for(prev = core.displays; prev && prev->next; prev = prev->next);
+    {
 
-    if (prev)
-	prev->next = d;
-    else
-	core.displays = d;
+    	if(prev)
+    	{
+			prev->next = d;
+    	}
+    	else
+    	{
+			core.displays = d;
+    	}
+    }
 }
 
-CompFileWatchHandle
-addFileWatch (const char	    *path,
-	      int		    mask,
-	      FileWatchCallBackProc callBack,
-	      void		    *closure)
+CompFileWatchHandle addFileWatch(const char *path, int	mask, FileWatchCallBackProc callBack, void *closure)
 {
     CompFileWatch *fileWatch;
 
-    fileWatch = malloc (sizeof (CompFileWatch));
-    if (!fileWatch)
-	return 0;
+    fileWatch = malloc(sizeof(CompFileWatch));
+    if(!fileWatch)
+    {
+		return 0;
+    }
 
     fileWatch->path	= strdup (path);
     fileWatch->mask	= mask;
@@ -264,8 +275,10 @@ addFileWatch (const char	    *path,
     fileWatch->closure  = closure;
     fileWatch->handle   = core.lastFileWatchHandle++;
 
-    if (core.lastFileWatchHandle == MAXSHORT)
-	core.lastFileWatchHandle = 1;
+    if(core.lastFileWatchHandle == MAXSHORT)
+    {
+		core.lastFileWatchHandle = 1;
+    }
 
     fileWatch->next = core.fileWatch;
     core.fileWatch = fileWatch;
@@ -282,24 +295,32 @@ removeFileWatch (CompFileWatchHandle handle)
 
     for (w = core.fileWatch; w; w = w->next)
     {
-	if (w->handle == handle)
-	    break;
+		if (w->handle == handle)
+		{
+			break;
+		}
 
-	p = w;
+		p = w;
     }
 
     if (w)
     {
-	if (p)
-	    p->next = w->next;
-	else
-	    core.fileWatch = w->next;
+		if (p)
+		{
+			p->next = w->next;
+		}
+		else
+		{
+			core.fileWatch = w->next;
+		}
 
-	(*core.fileWatchRemoved) (&core, w);
+		(*core.fileWatchRemoved) (&core, w);
 
-	if (w->path)
-	    free (w->path);
+		if (w->path)
+		{
+			free (w->path);
+		}
 
-	free (w);
+		free (w);
     }
 }

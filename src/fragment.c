@@ -184,34 +184,36 @@ findFragmentFunctionWithName (CompScreen *s,
     return NULL;
 }
 
-static CompProgram *
-findFragmentProgram (CompScreen *s,
-		     int	*signature,
-		     int	nSignature)
+static CompProgram *findFragmentProgram(CompScreen *s, int *signature, int nSignature)
 {
     CompProgram *program;
     int		i;
 
-    for (program = s->fragmentPrograms; program; program = program->next)
+    for(program = s->fragmentPrograms; program; program = program->next)
     {
-	if (nSignature != program->nSignature)
-	    continue;
-
-	for (i = 0; i < nSignature; i++)
+	if(nSignature != program->nSignature)
 	{
-	    if (program->signature[i] != signature[i])
-		break;
+	    continue;
 	}
 
-	if (i == nSignature)
+	for(i = 0; i < nSignature; i++)
+	{
+	    if(program->signature[i] != signature[i])
+	    {
+		break;
+	    }
+	}
+
+	if(i == nSignature)
+	{
 	    return program;
+	}
     }
 
     return NULL;
 }
 
-static int
-functionMaskToType (int mask)
+static int functionMaskToType(int mask)
 {
     static struct {
 	int type;
@@ -221,9 +223,13 @@ functionMaskToType (int mask)
     };
     int i;
 
-    for (i = 0; i < sizeof (maskToType) / sizeof (maskToType[0]); i++)
-	if (mask & maskToType[i].mask)
+    for(i = 0; i < sizeof(maskToType) / sizeof(maskToType[0]); i++)
+    {
+	if(mask & maskToType[i].mask)
+	{
 	    return maskToType[i].type;
+	}
+    }
 
     return 0;
 }
@@ -663,25 +669,27 @@ getFragmentProgram (CompScreen	   *s,
     CompProgram	*program;
 
     if (!attrib->nFunction)
-	return 0;
+	{
+		return 0;
+	}
 
     program = findFragmentProgram (s, attrib->function, attrib->nFunction);
     if (!program)
     {
-	program = buildFragmentProgram (s, attrib);
-	if (program)
-	{
-	    program->next = s->fragmentPrograms;
-	    s->fragmentPrograms = program;
-	}
+		program = buildFragmentProgram (s, attrib);
+		if (program)
+		{
+			program->next = s->fragmentPrograms;
+			s->fragmentPrograms = program;
+		}
     }
 
     if (program)
     {
-	*type     = program->type;
-	*blending = program->blending;
+		*type     = program->type;
+		*blending = program->blending;
 
-	return program->name;
+		return program->name;
     }
 
     return 0;
@@ -694,7 +702,9 @@ createFunctionData (void)
 
     data = malloc (sizeof (CompFunctionData));
     if (!data)
-	return NULL;
+	{
+		return NULL;
+	}
 
     data->header  = NULL;
     data->nHeader = 0;
@@ -1209,51 +1219,63 @@ destroyFragmentFunction (CompScreen *s,
 
     for (function = s->fragmentFunctions; function; function = function->next)
     {
-	if (function->id == id)
-	    break;
+		if (function->id == id)
+		{
+			break;
+		}
 
-	prevFunction = function;
+		prevFunction = function;
     }
 
     if (!function)
-	return;
+	{
+		return;
+	}
 
     program = s->fragmentPrograms;
     while (program)
     {
-	for (i = 0; i < program->nSignature; i++)
-	{
-	    if (program->signature[i] == id)
-		break;
-	}
+		for (i = 0; i < program->nSignature; i++)
+		{
+			if (program->signature[i] == id)
+			break;
+		}
 
-	if (i < program->nSignature)
-	{
-	    CompProgram *tmp = program;
+		if (i < program->nSignature)
+		{
+			CompProgram *tmp = program;
 
-	    if (prevProgram)
-		prevProgram->next = program->next;
-	    else
-		s->fragmentPrograms = program->next;
+			if (prevProgram)
+			{
+				prevProgram->next = program->next;
+			}
+			else
+			{
+				s->fragmentPrograms = program->next;
+			}
 
-	    program = program->next;
+			program = program->next;
 
-	    (*s->deletePrograms) (1, &tmp->name);
+			(*s->deletePrograms) (1, &tmp->name);
 
-	    free (tmp->signature);
-	    free (tmp);
-	}
-	else
-	{
-	    prevProgram = program;
-	    program = program->next;
-	}
+			free (tmp->signature);
+			free (tmp);
+		}
+		else
+		{
+			prevProgram = program;
+			program = program->next;
+		}
     }
 
     if (prevFunction)
-	prevFunction->next = function->next;
+	{
+		prevFunction->next = function->next;
+	}
     else
-	s->fragmentFunctions = function->next;
+	{
+		s->fragmentFunctions = function->next;
+	}
 
     finiFunctionData (&function->data[COMP_FUNCTION_TYPE_ARB]);
     free (function->name);
@@ -1268,57 +1290,63 @@ getSaturateFragmentFunction (CompScreen  *s,
     int target;
 
     if (param >= 64)
-	return 0;
+	{
+		return 0;
+	}
 
     if (texture->target == GL_TEXTURE_2D)
-	target = COMP_FETCH_TARGET_2D;
+	{
+		target = COMP_FETCH_TARGET_2D;
+	}
     else
-	target = COMP_FETCH_TARGET_RECT;
+	{
+		target = COMP_FETCH_TARGET_RECT;
+	}
 
     if (!s->saturateFunction[target][param])
     {
-	static const char *saturateData =
-	    "MUL temp, output, { 1.0, 1.0, 1.0, 0.0 };"
-	    "DP3 temp, temp, program.env[%d];"
-	    "LRP output.xyz, program.env[%d].w, output, temp;";
-	CompFunctionData  *data;
+		static const char *saturateData =
+			"MUL temp, output, { 1.0, 1.0, 1.0, 0.0 };"
+			"DP3 temp, temp, program.env[%d];"
+			"LRP output.xyz, program.env[%d].w, output, temp;";
+		CompFunctionData  *data;
 
-	data = createFunctionData ();
-	if (data)
-	{
-	    char str[1024];
+		data = createFunctionData ();
+		if (data)
+		{
+			char str[1024];
 
-	    if (!addTempHeaderOpToFunctionData (data, "temp"))
-	    {
-		destroyFunctionData (data);
-		return 0;
-	    }
+			if (!addTempHeaderOpToFunctionData (data, "temp"))
+			{
+				destroyFunctionData (data);
+				return 0;
+			}
 
-	    if (!addFetchOpToFunctionData (data, "output", NULL, target))
-	    {
-		destroyFunctionData (data);
-		return 0;
-	    }
+			if (!addFetchOpToFunctionData (data, "output", NULL, target))
+			{
+				destroyFunctionData (data);
+				return 0;
+			}
 
-	    if (!addColorOpToFunctionData (data, "output", "output"))
-	    {
-		destroyFunctionData (data);
-		return 0;
-	    }
+			if (!addColorOpToFunctionData (data, "output", "output"))
+			{
+				destroyFunctionData (data);
+				return 0;
+			}
 
-	    snprintf (str, 1024, saturateData, param, param);
+			snprintf (str, 1024, saturateData, param, param);
 
-	    if (!addDataOpToFunctionData (data, str))
-	    {
-		destroyFunctionData (data);
-		return 0;
-	    }
+			if (!addDataOpToFunctionData (data, str))
+			{
+				destroyFunctionData (data);
+				return 0;
+			}
 
-	    s->saturateFunction[target][param] =
-		createFragmentFunction (s, "__core_saturate", data);
+			s->saturateFunction[target][param] =
+			createFragmentFunction (s, "__core_saturate", data);
 
-	    destroyFunctionData (data);
-	}
+			destroyFunctionData (data);
+		}
     }
 
     return s->saturateFunction[target][param];
@@ -1352,7 +1380,9 @@ addFragmentFunction (FragmentAttrib *attrib,
 		     int	    function)
 {
     if (attrib->nFunction < MAX_FRAGMENT_FUNCTIONS)
-	attrib->function[attrib->nFunction++] = function;
+	{
+		attrib->function[attrib->nFunction++] = function;
+	}
 }
 
 void
@@ -1379,11 +1409,15 @@ enableFragmentAttrib (CompScreen     *s,
     Bool   programBlending;
 
     if (!s->fragmentProgram)
-	return FALSE;
+	{
+		return FALSE;
+	}
 
     name = getFragmentProgram (s, attrib, &type, &programBlending);
     if (!name)
-	return FALSE;
+	{
+		return FALSE;
+	}
 
     *blending = !programBlending;
 
