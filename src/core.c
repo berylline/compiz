@@ -154,6 +154,23 @@ fileWatchRemoved (CompCore      *core,
 {
 }
 
+static void setCoreProcs(void)
+{
+	core.initPluginForObject = initCorePluginForObject;
+	core.finiPluginForObject = finiCorePluginForObject;
+
+	core.setOptionForPlugin = setOptionForPlugin;
+
+	core.objectAdd    = coreObjectAdd;
+	core.objectRemove = coreObjectRemove;
+
+	core.fileWatchAdded   = fileWatchAdded;
+	core.fileWatchRemoved = fileWatchRemoved;
+
+	core.sessionEvent = sessionEvent;
+	core.logMessage   = logMessage;
+}
+
 CompBool initCore(void)
 {
     CompPlugin *corePlugin;
@@ -188,19 +205,7 @@ CompBool initCore(void)
 
     gettimeofday(&core.lastTimeout, 0);
 
-    core.initPluginForObject = initCorePluginForObject;
-    core.finiPluginForObject = finiCorePluginForObject;
-
-    core.setOptionForPlugin = setOptionForPlugin;
-
-    core.objectAdd    = coreObjectAdd;
-    core.objectRemove = coreObjectRemove;
-
-    core.fileWatchAdded   = fileWatchAdded;
-    core.fileWatchRemoved = fileWatchRemoved;
-
-    core.sessionEvent = sessionEvent;
-    core.logMessage   = logMessage;
+    setCoreProcs();
 
     corePlugin = loadPlugin("core");
     if(!corePlugin)

@@ -36,6 +36,13 @@
 
 #include <compiz-core.h>
 
+typedef struct _CompIOCtx {
+    int	 offset;
+    char *pluginData;
+    char *textureFilterData;
+    char *refreshRateData;
+} CompIOCtx;
+
 char *programName;
 char **programArgv;
 int  programArgc;
@@ -144,19 +151,19 @@ const char *logLevelToString (CompLogLevel level)
     switch (level) {
 		case CompLogLevelFatal:
 		return "Fatal";
-		
+
 		case CompLogLevelError:
 		return "Error";
-		
+
 		case CompLogLevelWarn:
 		return "Warn";
-		
+
 		case CompLogLevelInfo:
 		return "Info";
-		
+
 		case CompLogLevelDebug:
 		return "Debug";
-		
+
 		default:
 		break;
     }
@@ -168,39 +175,32 @@ static void signalHandler(int sig)
 {
     int status;
 
-    switch(sig) 
+    switch(sig)
 	{
 		case SIGCHLD:
 			waitpid(-1, &status, WNOHANG | WUNTRACED);
 			break;
-		
+
 		case SIGHUP:
 			restartSignal = TRUE;
 			break;
-		
+
 		case SIGINT:
 		case SIGTERM:
 			shutDown = TRUE;
-		
+
 		default:
 			break;
     }
 }
 
-static void registerSignalHandler()
+static void registerSignalHandler(void)
 {
-	signal(SIGHUP, signalHandler); 
+	signal(SIGHUP, signalHandler);
     signal(SIGCHLD, signalHandler);
     signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);
 }
-
-typedef struct _CompIOCtx {
-    int	 offset;
-    char *pluginData;
-    char *textureFilterData;
-    char *refreshRateData;
-} CompIOCtx;
 
 static int readCoreXmlCallback(void *context, char *buffer, int  length)
 {
@@ -264,7 +264,7 @@ static int readCoreXmlCallback(void *context, char *buffer, int  length)
     return i;
 }
 
-static void initRegions()
+static void initRegions(void)
 {
     emptyRegion.rects = &emptyRegion.extents;
     emptyRegion.numRects = 0;
@@ -282,7 +282,7 @@ static void initRegions()
     infiniteRegion.extents.y2 = MAXSHORT;
 }
 
-static void setRefreshRateData()
+static void setRefreshRateData(void)
 {
 	if(refreshRateArg)
     {
@@ -294,10 +294,10 @@ static void setRefreshRateData()
     }
 }
 
-static int parseArgs()
+static int parseArgs(void)
 {
     int	i;
-	
+
     for (i = 1; i < programArgc; i++)
     {
 		if(!strcmp(programArgv[i], "--help"))
@@ -402,11 +402,11 @@ static int parseArgs()
 			plugin[nPlugin++] = programArgv[i];
 		}
     }
-    
+
 	return 1;
 }
 
-static int compizInit()
+static int compizInit(void)
 {
     xmlInitParser();
 
@@ -422,17 +422,17 @@ static int compizInit()
     {
 		return 1;
     }
-    
+
     if(ctx.refreshRateData)
     {
 		free(ctx.refreshRateData);
     }
-    
+
     if(ctx.pluginData)
     {
 		free(ctx.pluginData);
     }
-    
+
     compAddMetadataFromFile(&coreMetadata, "core");
 
     if(!initCore())
@@ -452,17 +452,17 @@ static int compizInit()
     {
 		return 1;
     }
-    
+
     return 0;
 }
 
-static void compizFree()
+static void compizFree(void)
 {
     if(!disableSm)
     {
         closeSession();
     }
-    
+
     coreInitialized = FALSE;
 
     finiCore();
@@ -476,14 +476,14 @@ static void compizFree()
     }
 }
 
-static void setPluginData()
+static void setPluginData(void)
 {
     int	i;
-	
+
     if(nPlugin)
     {
 		int size = 256;
-	
+
 		for(i = 0; i < nPlugin; i++)
 		{
 			size += strlen(plugin[i]) + 16;
@@ -533,7 +533,7 @@ int main(int argc, char **argv)
     {
         return 0;
     }
-	
+
 	setRefreshRateData();
 
     setPluginData();

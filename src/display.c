@@ -116,7 +116,7 @@ forEachDisplayObject (CompObject         *parent,
 		      void	         *closure)
 {
     CompDisplay *d;
-	
+
 	if (parent->type == COMP_OBJECT_TYPE_CORE)
     {
 		for (d = core.displays; d; d = d->next)
@@ -358,7 +358,7 @@ raiseInitiate (CompDisplay     *d,
 	{
 		raiseWindow (w);
 	}
-	
+
     return TRUE;
 }
 
@@ -649,7 +649,7 @@ setDisplayOption (CompPlugin	  *plugin,
     switch (index) {
 		case COMP_DISPLAY_OPTION_ABI:
 			break;
-		
+
 		case COMP_DISPLAY_OPTION_ACTIVE_PLUGINS:
 			if (compSetOptionList (o, value))
 			{
@@ -657,7 +657,7 @@ setDisplayOption (CompPlugin	  *plugin,
 				return TRUE;
 			}
 			break;
-		
+
 		case COMP_DISPLAY_OPTION_TEXTURE_FILTER:
 			if (compSetIntOption (o, value))
 			{
@@ -678,7 +678,7 @@ setDisplayOption (CompPlugin	  *plugin,
 				return TRUE;
 			}
 			break;
-		
+
 		case COMP_DISPLAY_OPTION_PING_DELAY:
 			if (compSetIntOption (o, value))
 			{
@@ -691,7 +691,7 @@ setDisplayOption (CompPlugin	  *plugin,
 				return TRUE;
 			}
 			break;
-		
+
 		case COMP_DISPLAY_OPTION_AUDIBLE_BELL:
 			if (compSetBoolOption (o, value))
 			{
@@ -699,7 +699,7 @@ setDisplayOption (CompPlugin	  *plugin,
 				return TRUE;
 			}
 			break;
-		
+
 		default:
 			if (compSetDisplayOption (display, o, value))
 			{
@@ -774,7 +774,7 @@ updatePlugins (CompDisplay *d)
 		{
 			continue;
 		}
-		
+
 		pList[k++].s = initialPlugins[j];
     }
     j = k;
@@ -794,7 +794,7 @@ updatePlugins (CompDisplay *d)
 				break;
 			}
 		}
-		
+
 		if (k == nInitialPlugins)
 		{
 			pList[j++].s = o->value.list.value[i].s;
@@ -1441,12 +1441,12 @@ paintScreen (CompScreen   *s,
 void processDisplayEvents(CompDisplay *d)
 {
 	XEvent	   event;
-	
+
 	while(XPending(d->display))
 	{
 		XNextEvent(d->display, &event);
 
-		switch (event.type) 
+		switch (event.type)
 		{
 			case ButtonPress:
 			case ButtonRelease:
@@ -1493,7 +1493,7 @@ void processDisplayEvents(CompDisplay *d)
 void removeDestroyedWindows(CompScreen *s)
 {
 	CompWindow 	*w;
-	
+
 	while (s->pendingDestroys)
 	{
 		for (w = s->windows; w; w = w->next)
@@ -1960,7 +1960,7 @@ aquireSelection (CompDisplay *d,
 
 void initWinTypeAtoms(CompDisplay *d)
 {
-	d->winTypeAtom	  = XInternAtom (d->display, "_NET_WM_WINDOW_TYPE", 0);
+	  d->winTypeAtom	  = XInternAtom (d->display, "_NET_WM_WINDOW_TYPE", 0);
     d->winTypeDesktopAtom = XInternAtom (d->display, "_NET_WM_WINDOW_TYPE_DESKTOP", 0);
     d->winTypeDockAtom    = XInternAtom (d->display, "_NET_WM_WINDOW_TYPE_DOCK", 0);
     d->winTypeToolbarAtom = XInternAtom (d->display, "_NET_WM_WINDOW_TYPE_TOOLBAR", 0);
@@ -1979,7 +1979,7 @@ void initWinTypeAtoms(CompDisplay *d)
 
 void initXdndAtoms(CompDisplay *d)
 {
-	d->xdndAwareAtom    = XInternAtom (d->display, "XdndAware", 0);
+	  d->xdndAwareAtom    = XInternAtom (d->display, "XdndAware", 0);
     d->xdndEnterAtom    = XInternAtom (d->display, "XdndEnter", 0);
     d->xdndLeaveAtom    = XInternAtom (d->display, "XdndLeave", 0);
     d->xdndPositionAtom = XInternAtom (d->display, "XdndPosition", 0);
@@ -1989,7 +1989,7 @@ void initXdndAtoms(CompDisplay *d)
 
 void initWinStateAtoms(CompDisplay *d)
 {
-	d->winStateAtom		    = XInternAtom (d->display, "_NET_WM_STATE", 0);
+	  d->winStateAtom		    = XInternAtom (d->display, "_NET_WM_STATE", 0);
     d->winStateModalAtom	    = XInternAtom (d->display, "_NET_WM_STATE_MODAL", 0);
     d->winStateStickyAtom	    = XInternAtom (d->display, "_NET_WM_STATE_STICKY", 0);
     d->winStateMaximizedVertAtom    = XInternAtom (d->display, "_NET_WM_STATE_MAXIMIZED_VERT", 0);
@@ -2007,7 +2007,7 @@ void initWinStateAtoms(CompDisplay *d)
 
 void initWinActionAtoms(CompDisplay *d)
 {
-	d->winActionMoveAtom	  = XInternAtom (d->display, "_NET_WM_ACTION_MOVE", 0);
+	  d->winActionMoveAtom	  = XInternAtom (d->display, "_NET_WM_ACTION_MOVE", 0);
     d->winActionResizeAtom	  = XInternAtom (d->display, "_NET_WM_ACTION_RESIZE", 0);
     d->winActionStickAtom	  = XInternAtom (d->display, "_NET_WM_ACTION_STICK", 0);
     d->winActionMinimizeAtom	  = XInternAtom (d->display, "_NET_WM_ACTION_MINIMIZE", 0);
@@ -2023,14 +2023,14 @@ void initWinActionAtoms(CompDisplay *d)
 
 void initColorAtoms(CompDisplay *d)
 {
-	d->winOpacityAtom	 = XInternAtom (d->display, "_NET_WM_WINDOW_OPACITY", 0);
+	  d->winOpacityAtom	 = XInternAtom (d->display, "_NET_WM_WINDOW_OPACITY", 0);
     d->winBrightnessAtom = XInternAtom (d->display, "_NET_WM_WINDOW_BRIGHTNESS", 0);
     d->winSaturationAtom = XInternAtom (d->display, "_NET_WM_WINDOW_SATURATION", 0);
 }
 
 void initDesktopAtoms(CompDisplay *d)
 {
-	d->winActiveAtom = XInternAtom (d->display, "_NET_ACTIVE_WINDOW", 0);
+	  d->winActiveAtom = XInternAtom (d->display, "_NET_ACTIVE_WINDOW", 0);
 
     d->winDesktopAtom = XInternAtom (d->display, "_NET_WM_DESKTOP", 0);
 
@@ -2044,7 +2044,7 @@ void initDesktopAtoms(CompDisplay *d)
 
 void initDisplayAtoms(CompDisplay *d)
 {
-	d->supportedAtom	     = XInternAtom (d->display, "_NET_SUPPORTED", 0);
+	  d->supportedAtom	     = XInternAtom (d->display, "_NET_SUPPORTED", 0);
     d->supportingWmCheckAtom = XInternAtom (d->display, "_NET_SUPPORTING_WM_CHECK", 0);
 
     d->utf8StringAtom = XInternAtom (d->display, "UTF8_STRING", 0);
@@ -2055,7 +2055,7 @@ void initDisplayAtoms(CompDisplay *d)
 
     initColorAtoms(d);
 
-	initDesktopAtoms(d);
+	  initDesktopAtoms(d);
 
     initWinStateAtoms(d);
 
@@ -2107,7 +2107,7 @@ void initDisplayAtoms(CompDisplay *d)
 
     d->mwmHintsAtom = XInternAtom (d->display, "_MOTIF_WM_HINTS", 0);
 
-	initXdndAtoms(d);
+	  initXdndAtoms(d);
 
     d->managerAtom   = XInternAtom (d->display, "MANAGER", 0);
     d->targetsAtom   = XInternAtom (d->display, "TARGETS", 0);
@@ -2121,7 +2121,7 @@ void initDisplayAtoms(CompDisplay *d)
 
 void setDisplayProcs(CompDisplay *d)
 {
-	d->handleEvent	 = handleEvent;
+	  d->handleEvent	 = handleEvent;
     d->handleCompizEvent = handleCompizEvent;
 
     d->fileToImage = fileToImage;
@@ -2185,13 +2185,13 @@ Bool initDisplayExtensions(CompDisplay *d)
     d->xkbExtension = XkbQueryExtension (d->display, &xkbOpcode, &d->xkbEvent, &d->xkbError, NULL, NULL);
     if (d->xkbExtension)
     {
-		XkbSelectEvents (d->display, XkbUseCoreKbd, XkbBellNotifyMask | XkbStateNotifyMask, XkbAllEventsMask);
+		    XkbSelectEvents (d->display, XkbUseCoreKbd, XkbBellNotifyMask | XkbStateNotifyMask, XkbAllEventsMask);
     }
     else
     {
-		compLogMessage ("core", CompLogLevelFatal, "No XKB extension");
-		
-		d->xkbEvent = d->xkbError = -1;
+  		compLogMessage ("core", CompLogLevelFatal, "No XKB extension");
+
+  		d->xkbEvent = d->xkbError = -1;
     }
 
     d->screenInfo  = NULL;
@@ -2200,10 +2200,10 @@ Bool initDisplayExtensions(CompDisplay *d)
     d->xineramaExtension = XineramaQueryExtension (d->display, &d->xineramaEvent, &d->xineramaError);
 
     if (d->xineramaExtension)
-	{
-		d->screenInfo = XineramaQueryScreens (d->display, &d->nScreenInfo);
-	}
-	
+  	{
+  		d->screenInfo = XineramaQueryScreens (d->display, &d->nScreenInfo);
+  	}
+
 	return TRUE;
 }
 
@@ -2218,23 +2218,23 @@ addDisplay (const char *name)
 
     d = malloc (sizeof (CompDisplay));
     if (!d)
-	{
-		return FALSE;
-	}
+    {
+      return FALSE;
+    }
 
     if (displayPrivateLen)
     {
-		privates = malloc (displayPrivateLen * sizeof (CompPrivate));
-		if (!privates)
-		{
-			free (d);
-			return FALSE;
-		}
+      privates = malloc (displayPrivateLen * sizeof (CompPrivate));
+      if (!privates)
+      {
+        free (d);
+        return FALSE;
+      }
     }
     else
-	{
-		privates = 0;
-	}
+    {
+      privates = 0;
+    }
 
     compObjectInit (&d->base, privates, COMP_OBJECT_TYPE_DISPLAY);
 
@@ -2251,9 +2251,9 @@ addDisplay (const char *name)
     d->modMap = 0;
 
     for (i = 0; i < CompModNum; i++)
-	{
-		d->modMask[i] = CompNoMask;
-	}
+    {
+      d->modMask[i] = CompNoMask;
+    }
 
     d->ignoredModMask = LockMask;
 
@@ -2263,18 +2263,18 @@ addDisplay (const char *name)
     d->plugin.list.nValue = 1;
     d->plugin.list.value  = malloc (sizeof (CompOptionValue));
 
-    if(!d->plugin.list.value) 
-	{
-		free(d);
-		return FALSE;
+    if(!d->plugin.list.value)
+    {
+      free(d);
+      return FALSE;
     }
 
     d->plugin.list.value->s = strdup ("core");
-    if (!d->plugin.list.value->s) 
-	{
-        free (d->plugin.list.value);
-		free (d);
-		return FALSE;
+    if (!d->plugin.list.value->s)
+    {
+      free (d->plugin.list.value);
+      free (d);
+      return FALSE;
     }
 
     d->dirtyPluginList = TRUE;
@@ -2290,14 +2290,14 @@ addDisplay (const char *name)
     d->display = XOpenDisplay (name);
     if(!d->display)
     {
-		compLogMessage("core", CompLogLevelFatal, "Couldn't open display %s", XDisplayName(name));
-		return FALSE;
+      compLogMessage("core", CompLogLevelFatal, "Couldn't open display %s", XDisplayName(name));
+      return FALSE;
     }
 
     if(!compInitDisplayOptionsFromMetadata(d, &coreMetadata, coreDisplayOptionInfo, d->opt, COMP_DISPLAY_OPTION_NUM))
-	{
-		return FALSE;
-	}
+    {
+      return FALSE;
+    }
 
     d->opt[COMP_DISPLAY_OPTION_ABI].value.i = CORE_ABIVERSION;
 
@@ -2317,16 +2317,16 @@ addDisplay (const char *name)
 
     d->snDisplay = sn_display_new (d->display, NULL, NULL);
     if (!d->snDisplay)
-	{
-		return FALSE;
-	}
+    {
+      return FALSE;
+    }
 
     d->lastPing = 1;
-	
+
 	if(initDisplayExtensions(d) == FALSE)
-	{
-		return FALSE;
-	}
+    {
+      return FALSE;
+    }
 
     d->escapeKeyCode = XKeysymToKeycode (d->display, XStringToKeysym ("Escape"));
     d->returnKeyCode = XKeysymToKeycode (d->display, XStringToKeysym ("Return"));
@@ -2340,13 +2340,13 @@ addDisplay (const char *name)
 
     if (onlyCurrentScreen)
     {
-		firstScreen = DefaultScreen (d->display);
-		lastScreen  = DefaultScreen (d->display);
+      firstScreen = DefaultScreen (d->display);
+      lastScreen  = DefaultScreen (d->display);
     }
     else
     {
-		firstScreen = 0;
-		lastScreen  = ScreenCount (d->display) - 1;
+      firstScreen = 0;
+      lastScreen  = ScreenCount (d->display) - 1;
     }
 
     for (i = firstScreen; i <= lastScreen; i++)
@@ -2437,7 +2437,7 @@ addDisplay (const char *name)
 		/* Wait for old window manager to go away */
 		if (currentWmSnOwner != None)
 		{
-			do 
+			do
 			{
 				XWindowEvent (d->display, currentWmSnOwner, StructureNotifyMask, &event);
 			} while (event.type != DestroyNotify);
@@ -2504,8 +2504,8 @@ addDisplay (const char *name)
 
     if (!d->screens)
     {
-		compLogMessage ("core", CompLogLevelFatal, "No manageable screens found on display %s", XDisplayName (name));
-		return FALSE;
+      compLogMessage ("core", CompLogLevelFatal, "No manageable screens found on display %s", XDisplayName (name));
+      return FALSE;
     }
 
     setAudibleBell (d, d->opt[COMP_DISPLAY_OPTION_AUDIBLE_BELL].value.b);
@@ -2518,21 +2518,21 @@ addDisplay (const char *name)
 
     if (focus == None || focus == PointerRoot)
     {
-		focusDefaultWindow (d->screens);
+		  focusDefaultWindow (d->screens);
     }
     else
     {
-		CompWindow *w;
+      CompWindow *w;
 
-		w = findWindowAtDisplay (d, focus);
-		if (w)
-		{
-			moveInputFocusToWindow (w);
-		}
-		else
-		{
-			focusDefaultWindow (d->screens);
-		}
+      w = findWindowAtDisplay (d, focus);
+      if (w)
+      {
+        moveInputFocusToWindow (w);
+      }
+      else
+      {
+        focusDefaultWindow (d->screens);
+      }
     }
 
     d->pingHandle = compAddTimeout(d->opt[COMP_DISPLAY_OPTION_PING_DELAY].value.i, d->opt[COMP_DISPLAY_OPTION_PING_DELAY].value.i + 500, pingTimeout, d);
